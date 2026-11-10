@@ -1,8 +1,8 @@
 {
-  "version": "1.15.6",
-  "file": "DeskWidgets-1.15.6-app.zip",
-  "sha256": "8e1eb2c4e479110632cb732e7ce08a8828a193f58f4410bb5aeea26ed0be53eb",
+  "version": "1.15.7",
+  "file": "DeskWidgets-1.15.7-app.zip",
+  "sha256": "67d643daf351746f19ee6fff72629c6f53a4efa342a4c5e8bd7a09ebf15ad697",
   "electron": "44.9.0",
-  "full": "DeskWidgets-1.15.6-win64.zip",
-  "notes": "스케쥴 변경신청 현황: 최근 날짜가 위로 · 출근 시각도 표시(출근변경 구분)"
+  "full": "DeskWidgets-1.15.7-win64.zip",
+  "notes": "출퇴근 현황에 퇴근 예정 표시(근무중 아래 작은 글씨) · 다크모드 제거(모두 밝은 화면)"
 }
