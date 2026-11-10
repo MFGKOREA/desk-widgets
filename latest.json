@@ -1,8 +1,8 @@
 {
-  "version": "1.15.9",
-  "file": "DeskWidgets-1.15.9-app.zip",
-  "sha256": "e1baeb587553c41c0a5fca13e91f7cc0ad3a5035ca7e647338927e79eba05664",
+  "version": "1.16.0",
+  "file": "DeskWidgets-1.16.0-app.zip",
+  "sha256": "e3ec80585b8cdbed9f124c6d1074ddcc79dc84c592b90d097f2a2822bd8616dd",
   "electron": "44.9.0",
-  "full": "DeskWidgets-1.15.9-win64.zip",
-  "notes": "업데이트 확인을 1시간마다 · 절전 해제 때도 확인"
+  "full": "DeskWidgets-1.16.0-win64.zip",
+  "notes": "스케쥴 변경신청 현황: 가운데 '플젝HR에서 승인하기' 버튼 · 대기 줄을 누르면 그 직원으로 승인 화면 열기"
 }
