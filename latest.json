@@ -1,8 +1,8 @@
 {
-  "version": "1.15.4",
-  "file": "DeskWidgets-1.15.4-app.zip",
-  "sha256": "1f9d362c7046bb094de842b40b4b029b7f79e9c8168ab39aa1215d79e27a6442",
+  "version": "1.15.6",
+  "file": "DeskWidgets-1.15.6-app.zip",
+  "sha256": "8e1eb2c4e479110632cb732e7ce08a8828a193f58f4410bb5aeea26ed0be53eb",
   "electron": "44.9.0",
-  "full": "DeskWidgets-1.15.4-win64.zip",
-  "notes": "자동 업데이트를 GitHub 저장소 파일로 (작은 업데이트) · 스케줄 변경 승인 화면 연결 · 닉네임 이름 맞추기 · BOH/FOH 지정"
+  "full": "DeskWidgets-1.15.6-win64.zip",
+  "notes": "스케쥴 변경신청 현황: 최근 날짜가 위로 · 출근 시각도 표시(출근변경 구분)"
 }
