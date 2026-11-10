@@ -1,0 +1,8 @@
+{
+  "version": "1.15.4",
+  "file": "DeskWidgets-1.15.4-app.zip",
+  "sha256": "1f9d362c7046bb094de842b40b4b029b7f79e9c8168ab39aa1215d79e27a6442",
+  "electron": "44.9.0",
+  "full": "DeskWidgets-1.15.4-win64.zip",
+  "notes": "자동 업데이트를 GitHub 저장소 파일로 (작은 업데이트) · 스케줄 변경 승인 화면 연결 · 닉네임 이름 맞추기 · BOH/FOH 지정"
+}
