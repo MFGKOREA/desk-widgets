@@ -1,8 +1,8 @@
 {
-  "version": "1.15.8",
-  "file": "DeskWidgets-1.15.8-app.zip",
-  "sha256": "2475cce89c33478c6afb1b15f7e4ec305b6640a3b0cc249226ff1b4164002533",
+  "version": "1.15.9",
+  "file": "DeskWidgets-1.15.9-app.zip",
+  "sha256": "e1baeb587553c41c0a5fca13e91f7cc0ad3a5035ca7e647338927e79eba05664",
   "electron": "44.9.0",
-  "full": "DeskWidgets-1.15.8-win64.zip",
-  "notes": "퇴근 예정이 휴게시간으로 잡히던 문제 수정 (근태계획의 퇴근 칸을 이름으로 찾음)"
+  "full": "DeskWidgets-1.15.9-win64.zip",
+  "notes": "업데이트 확인을 1시간마다 · 절전 해제 때도 확인"
 }
