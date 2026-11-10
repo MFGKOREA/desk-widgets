@@ -1,8 +1,8 @@
 {
-  "version": "1.15.7",
-  "file": "DeskWidgets-1.15.7-app.zip",
-  "sha256": "67d643daf351746f19ee6fff72629c6f53a4efa342a4c5e8bd7a09ebf15ad697",
+  "version": "1.15.8",
+  "file": "DeskWidgets-1.15.8-app.zip",
+  "sha256": "2475cce89c33478c6afb1b15f7e4ec305b6640a3b0cc249226ff1b4164002533",
   "electron": "44.9.0",
-  "full": "DeskWidgets-1.15.7-win64.zip",
-  "notes": "출퇴근 현황에 퇴근 예정 표시(근무중 아래 작은 글씨) · 다크모드 제거(모두 밝은 화면)"
+  "full": "DeskWidgets-1.15.8-win64.zip",
+  "notes": "퇴근 예정이 휴게시간으로 잡히던 문제 수정 (근태계획의 퇴근 칸을 이름으로 찾음)"
 }
