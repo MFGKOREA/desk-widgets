@@ -1,9 +1,9 @@
 {
-  "version": "1.16.2",
-  "file": "DeskWidgets-1.16.2-app.zip",
-  "sha256": "0cb25c8bba1f3438df11f9dd79016d3eeba4176b332647fbedc329b4e40c655e",
+  "version": "1.17.0",
+  "file": "DeskWidgets-1.17.0-app.zip",
+  "sha256": "528c91830f9ba47ecf93591ff5dddd9916c55e9c824698c28f4ddd89ebf5338d",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.16.2-win64.zip",
-  "notes": "업데이트 설치 방식 변경: cmd(tar·robocopy) 우선, 설치 도구가 시작된 것을 확인한 뒤에만 종료"
+  "full": "DeskWidgets-1.17.0-win64.zip",
+  "notes": "Easier to read: darker text colors, no text under 11px, solid widget background, one-line header (date and update time next to the title), BOH/FOH headers show working/planned/no-show counts, past reservation rows muted without fading."
 }
