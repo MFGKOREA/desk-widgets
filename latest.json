@@ -1,9 +1,9 @@
 {
-  "version": "1.17.2",
-  "file": "DeskWidgets-1.17.2-app.zip",
-  "sha256": "25ff372a84b917640eb36e57ff0101c46a6e4874dc9451a02b005eb025980256",
+  "version": "1.17.3",
+  "file": "DeskWidgets-1.17.3-app.zip",
+  "sha256": "12be8192391f954a36cffdbc792512d90d1516705ef5a9f75271d06b3aaaf293",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.2-win64.zip",
-  "notes": "Attendance: matches schedule and clock-in names even when one side drops the surname or adds a nickname, so those staff no longer show as no-show."
+  "full": "DeskWidgets-1.17.3-win64.zip",
+  "notes": "Attendance: click '미출근' or 'HH:MM 예정' to mark someone off today and remove them from the list (today only). More off-day words recognized (오프, 휴, 비번, X, 00:00 only)."
 }
