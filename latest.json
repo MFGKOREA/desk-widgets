@@ -1,9 +1,9 @@
 {
-  "version": "1.17.6",
-  "file": "DeskWidgets-1.17.6-app.zip",
-  "sha256": "79183db64c130c898aecced86c1d4e71d059903493d3abcbbddfac1ad383cb6f",
+  "version": "1.17.7",
+  "file": "DeskWidgets-1.17.7-app.zip",
+  "sha256": "6ee6ed1bbe87692f38d21131b9d6b283243cc4e9e91adcdf5e653160eb075c33",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.6-win64.zip",
-  "notes": "Attendance: fixed text overlapping in the 출근/퇴근 columns (the 미출근 picker is now a small menu). Structure export also records the weekly schedule's data fields (no names or phone numbers)."
+  "full": "DeskWidgets-1.17.7-win64.zip",
+  "notes": "Attendance: fixed reading tomorrow's column of the weekly schedule (each day has 3 hidden cells in HR's table). Off-day staff no longer appear and today's staff are no longer missing. Schedule re-checked every 5 minutes."
 }
