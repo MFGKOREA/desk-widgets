@@ -1,9 +1,9 @@
 {
-  "version": "1.17.4",
-  "file": "DeskWidgets-1.17.4-app.zip",
-  "sha256": "9ab70b45a06203093c880486927984398ba91b74dde4f66133559d9347175778",
+  "version": "1.17.5",
+  "file": "DeskWidgets-1.17.5-app.zip",
+  "sha256": "63ef4fda75fcc6a0d8c7d6110dcbaea2d3433de3ad981b63bfcc57803c9ce2a9",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.4-win64.zip",
-  "notes": "Attendance: fixes off-day staff showing as no-show. The weekly schedule's name rows and day rows are now paired by row ID, so a hidden row can no longer shift someone onto another person's schedule; if rows can't be paired safely the schedule is skipped instead of guessed."
+  "full": "DeskWidgets-1.17.5-win64.zip",
+  "notes": "Attendance: the screen-structure export now also opens the weekly schedule and records how today's column is read (names masked). Includes 1.17.4's fix pairing schedule rows by row ID."
 }
