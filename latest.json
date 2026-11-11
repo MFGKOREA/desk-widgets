@@ -1,9 +1,9 @@
 {
-  "version": "1.18.0",
-  "file": "DeskWidgets-1.18.0-app.zip",
-  "sha256": "0a5734425b265ffb8a875a67ab04c8a70da3624227fb4a3e990e705c4c47068c",
+  "version": "1.18.1",
+  "file": "DeskWidgets-1.18.1-app.zip",
+  "sha256": "98dbbe05868e568121df6937e878b5cd39feffed88ea2ab7adb414f4b16986ed",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.18.0-win64.zip",
-  "notes": "Attendance reads HR's weekly schedule data directly and matches staff by employee number; shows only department, name, clock-in and clock-out (red 미출근 when late). Reservations: browse other dates with the arrows (shown only after the site confirms that date)."
+  "full": "DeskWidgets-1.18.1-win64.zip",
+  "notes": "Attendance: times not yet clocked show the planned time in gray with a dashed outline; clocked times stay bold."
 }
