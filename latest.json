@@ -1,9 +1,9 @@
 {
-  "version": "1.17.3",
-  "file": "DeskWidgets-1.17.3-app.zip",
-  "sha256": "12be8192391f954a36cffdbc792512d90d1516705ef5a9f75271d06b3aaaf293",
+  "version": "1.17.4",
+  "file": "DeskWidgets-1.17.4-app.zip",
+  "sha256": "9ab70b45a06203093c880486927984398ba91b74dde4f66133559d9347175778",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.3-win64.zip",
-  "notes": "Attendance: click '미출근' or 'HH:MM 예정' to mark someone off today and remove them from the list (today only). More off-day words recognized (오프, 휴, 비번, X, 00:00 only)."
+  "full": "DeskWidgets-1.17.4-win64.zip",
+  "notes": "Attendance: fixes off-day staff showing as no-show. The weekly schedule's name rows and day rows are now paired by row ID, so a hidden row can no longer shift someone onto another person's schedule; if rows can't be paired safely the schedule is skipped instead of guessed."
 }
