@@ -1,9 +1,9 @@
 {
-  "version": "1.17.7",
-  "file": "DeskWidgets-1.17.7-app.zip",
-  "sha256": "6ee6ed1bbe87692f38d21131b9d6b283243cc4e9e91adcdf5e653160eb075c33",
+  "version": "1.18.0",
+  "file": "DeskWidgets-1.18.0-app.zip",
+  "sha256": "0a5734425b265ffb8a875a67ab04c8a70da3624227fb4a3e990e705c4c47068c",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.7-win64.zip",
-  "notes": "Attendance: fixed reading tomorrow's column of the weekly schedule (each day has 3 hidden cells in HR's table). Off-day staff no longer appear and today's staff are no longer missing. Schedule re-checked every 5 minutes."
+  "full": "DeskWidgets-1.18.0-win64.zip",
+  "notes": "Attendance reads HR's weekly schedule data directly and matches staff by employee number; shows only department, name, clock-in and clock-out (red 미출근 when late). Reservations: browse other dates with the arrows (shown only after the site confirms that date)."
 }
