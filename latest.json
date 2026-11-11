@@ -1,9 +1,9 @@
 {
-  "version": "1.17.0",
-  "file": "DeskWidgets-1.17.0-app.zip",
-  "sha256": "528c91830f9ba47ecf93591ff5dddd9916c55e9c824698c28f4ddd89ebf5338d",
+  "version": "1.17.1",
+  "file": "DeskWidgets-1.17.1-app.zip",
+  "sha256": "f1214f173f0c43cdc0fa51e80cb5ee6fee86f69b280fbcaacce98f0da280d088",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.0-win64.zip",
-  "notes": "Easier to read: darker text colors, no text under 11px, solid widget background, one-line header (date and update time next to the title), BOH/FOH headers show working/planned/no-show counts, past reservation rows muted without fading."
+  "full": "DeskWidgets-1.17.1-win64.zip",
+  "notes": "Attendance: no more separate 'unplanned' section. Someone who clocked in but isn't on the schedule shows in their group with a '확인' picker: choose who they are on the schedule, mark BOH/FOH work, or hide. Saved on this PC; reset from the tray menu."
 }
