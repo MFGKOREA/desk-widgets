@@ -1,9 +1,9 @@
 {
-  "version": "1.17.5",
-  "file": "DeskWidgets-1.17.5-app.zip",
-  "sha256": "63ef4fda75fcc6a0d8c7d6110dcbaea2d3433de3ad981b63bfcc57803c9ce2a9",
+  "version": "1.17.6",
+  "file": "DeskWidgets-1.17.6-app.zip",
+  "sha256": "79183db64c130c898aecced86c1d4e71d059903493d3abcbbddfac1ad383cb6f",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "full": "DeskWidgets-1.17.5-win64.zip",
-  "notes": "Attendance: the screen-structure export now also opens the weekly schedule and records how today's column is read (names masked). Includes 1.17.4's fix pairing schedule rows by row ID."
+  "full": "DeskWidgets-1.17.6-win64.zip",
+  "notes": "Attendance: fixed text overlapping in the 출근/퇴근 columns (the 미출근 picker is now a small menu). Structure export also records the weekly schedule's data fields (no names or phone numbers)."
 }
