@@ -1,12 +1,12 @@
 {
-  "version": "1.19.2",
-  "file": "DeskWidgets-1.19.2-app.zip",
-  "sha256": "dba6a855258e8416141f79202d0b5f32995365acc21702e9a359220110a3cb73",
+  "version": "1.19.3",
+  "file": "DeskWidgets-1.19.3-app.zip",
+  "sha256": "5547a3813589314782620597303c15f2acc3363f4f014ce704ac66d2b90066d2",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.19.2.asar",
-  "asarSha256": "80791e0eedcb2690ef2bec63cdf47b462ee5b09fad131b73f945b096dc0f906a",
-  "asarSize": 2652103,
-  "full": "DeskWidgets-1.19.2-win64.zip",
-  "notes": "Windows auto-start is re-registered to the current program folder on every launch (it pointed to the first installed folder, so the widgets did not start after a reboot). Warns if auto-start is disabled in Task Manager."
+  "asar": "DeskWidgets-1.19.3.asar",
+  "asarSha256": "660d08ce11e673be0f3f5fa974c137d1f5ca83bad2db7d91eab4b53ef2db394d",
+  "asarSize": 2652816,
+  "full": "DeskWidgets-1.19.3-win64.zip",
+  "notes": "Attendance: a clock-out is shown even when there is no clock-in; the clock-in column says '출근 미기록' instead of 미출근, and no no-show alert is sent."
 }
