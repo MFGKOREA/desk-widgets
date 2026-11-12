@@ -1,12 +1,12 @@
 {
-  "version": "1.19.1",
-  "file": "DeskWidgets-1.19.1-app.zip",
-  "sha256": "0966be0579e5f0c14d2b6c8b01c9c6ed77a92a4353f74935871499df1e8adc3a",
+  "version": "1.19.2",
+  "file": "DeskWidgets-1.19.2-app.zip",
+  "sha256": "dba6a855258e8416141f79202d0b5f32995365acc21702e9a359220110a3cb73",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.19.1.asar",
-  "asarSha256": "f435f5211b842744856a8bdaeb4dc5da5b4ac3c75b41362b7b9b3a272ba2a59b",
-  "asarSize": 2648195,
-  "full": "DeskWidgets-1.19.1-win64.zip",
-  "notes": "Reservations: remaining reservations shown large at the top with the day's total at top right; current waiting (teams / people) from the waiting management page below it. Structure export reloads the reservation page and includes the waiting summary."
+  "asar": "DeskWidgets-1.19.2.asar",
+  "asarSha256": "80791e0eedcb2690ef2bec63cdf47b462ee5b09fad131b73f945b096dc0f906a",
+  "asarSize": 2652103,
+  "full": "DeskWidgets-1.19.2-win64.zip",
+  "notes": "Windows auto-start is re-registered to the current program folder on every launch (it pointed to the first installed folder, so the widgets did not start after a reboot). Warns if auto-start is disabled in Task Manager."
 }
