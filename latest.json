@@ -1,12 +1,12 @@
 {
-  "version": "1.19.0",
-  "file": "DeskWidgets-1.19.0-app.zip",
-  "sha256": "61c61140a8f35fcd6c88a49e859607ea6bdff7d4935765057ca817c1bcb6b9a7",
+  "version": "1.19.1",
+  "file": "DeskWidgets-1.19.1-app.zip",
+  "sha256": "0966be0579e5f0c14d2b6c8b01c9c6ed77a92a4353f74935871499df1e8adc3a",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.19.0.asar",
-  "asarSha256": "4039fad285de5e6f133853b7e31a11137694dc4bf7042616da55385822821f88",
-  "asarSize": 2641123,
-  "full": "DeskWidgets-1.19.0-win64.zip",
-  "notes": "New auto-update: downloads only the app file, restarts, and rolls back automatically if the new version fails. Convention events archive for analysis (events.csv, daily.csv). Structure export covers all HR screens and the reservation date box. Staff names masked in diagnostic files."
+  "asar": "DeskWidgets-1.19.1.asar",
+  "asarSha256": "f435f5211b842744856a8bdaeb4dc5da5b4ac3c75b41362b7b9b3a272ba2a59b",
+  "asarSize": 2648195,
+  "full": "DeskWidgets-1.19.1-win64.zip",
+  "notes": "Reservations: remaining reservations shown large at the top with the day's total at top right; current waiting (teams / people) from the waiting management page below it. Structure export reloads the reservation page and includes the waiting summary."
 }
