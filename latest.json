@@ -1,12 +1,12 @@
 {
-  "version": "1.19.3",
-  "file": "DeskWidgets-1.19.3-app.zip",
-  "sha256": "5547a3813589314782620597303c15f2acc3363f4f014ce704ac66d2b90066d2",
+  "version": "1.20.0",
+  "file": "DeskWidgets-1.20.0-app.zip",
+  "sha256": "a588517a91563fd01d56791b496da6d728374f56520b211cd4b0c2b704b85333",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.19.3.asar",
-  "asarSha256": "660d08ce11e673be0f3f5fa974c137d1f5ca83bad2db7d91eab4b53ef2db394d",
-  "asarSize": 2652816,
-  "full": "DeskWidgets-1.19.3-win64.zip",
-  "notes": "Attendance: a clock-out is shown even when there is no clock-in; the clock-in column says '출근 미기록' instead of 미출근, and no no-show alert is sent."
+  "asar": "DeskWidgets-1.20.0.asar",
+  "asarSha256": "93aa95395e17033a1feda8589f6c3d0cb9f71ef49049fc6d36491b3c528f7738",
+  "asarSize": 2665248,
+  "full": "DeskWidgets-1.20.0-win64.zip",
+  "notes": "Phone view: DeskWidgets sends a summary of the 4 widgets to your own Google Apps Script web app every 90 seconds; open the view address on your phone (your Google login only). Setup files and guide in the 휴대폰으로보기 folder."
 }
