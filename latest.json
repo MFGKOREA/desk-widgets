@@ -1,12 +1,12 @@
 {
-  "version": "1.21.1",
-  "file": "DeskWidgets-1.21.1-app.zip",
-  "sha256": "13330faa54c866b80f9f218f14ded949726854fa517e94f8d3b8fd04577f387a",
+  "version": "1.21.2",
+  "file": "DeskWidgets-1.21.2-app.zip",
+  "sha256": "4620770dab5aef8b830a03b7f05c4022c08fef47606e11bdf1d508e3061031b8",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.21.1.asar",
-  "asarSha256": "22d222dfebb2d00f6372070e37095ab62a9c5ece7f35df4dba852a9599f550f5",
-  "asarSize": 2676725,
-  "full": "DeskWidgets-1.21.1-win64.zip",
-  "notes": "Order sheet events feed: uses the order sheet server's address by default and its store-key field (k); sends without a key while the store key is off, and asks for the key when the sheet requires it."
+  "asar": "DeskWidgets-1.21.2.asar",
+  "asarSha256": "2623a472a5cf6ea5d93a51a28bc03e751324c85bfbc2cf6e484e06c81fd319ee",
+  "asarSize": 2677845,
+  "full": "DeskWidgets-1.21.2-win64.zip",
+  "notes": "Order sheet events feed now starts at 2026-09-01 and includes recordFrom; resends once after the change"
 }
