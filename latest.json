@@ -1,12 +1,12 @@
 {
-  "version": "1.21.0",
-  "file": "DeskWidgets-1.21.0-app.zip",
-  "sha256": "9996c9812c42563a1ef129ff6e73093f80536ae5c9d321453a208c80f7ab0413",
+  "version": "1.21.1",
+  "file": "DeskWidgets-1.21.1-app.zip",
+  "sha256": "13330faa54c866b80f9f218f14ded949726854fa517e94f8d3b8fd04577f387a",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.21.0.asar",
-  "asarSha256": "d52fa2cbccacae86db47462851a45bd195b7a7787904bab33e938ffc285f6e26",
-  "asarSize": 2673944,
-  "full": "DeskWidgets-1.21.0-win64.zip",
-  "notes": "Convention events to the order sheet: once a day, the last 60 and next 60 days of events (per-day counts, venue capacity, expected visitors, names) go to the order sheet's events field. Public event data only."
+  "asar": "DeskWidgets-1.21.1.asar",
+  "asarSha256": "22d222dfebb2d00f6372070e37095ab62a9c5ece7f35df4dba852a9599f550f5",
+  "asarSize": 2676725,
+  "full": "DeskWidgets-1.21.1-win64.zip",
+  "notes": "Order sheet events feed: uses the order sheet server's address by default and its store-key field (k); sends without a key while the store key is off, and asks for the key when the sheet requires it."
 }
