@@ -390,6 +390,22 @@
   .card-foot span { font-variant-numeric: normal; }
   .card-note { font-size: 10.5px; color: var(--mute2); line-height: 1.5; margin-top: -3px; }
 
+  /* 오늘 그룹웨어 발주 확인 */
+  .order-now { border-top: 1px solid var(--line2); margin-top: 9px; padding-top: 9px; display: flex; flex-direction: column; gap: 7px; }
+  .order-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .order-btn { min-width: 0; flex: 0 0 auto; min-height: 38px; padding: 7px 14px; font-size: 12.5px; font-weight: 800; color: #18181b; }
+  .order-when { font-size: 10.5px; color: var(--mute2); text-align: right; line-height: 1.35; }
+  .order-lbar { height: 3px; margin: 0; }
+  .order-out { background: var(--stat); border: 1px solid var(--line2); border-radius: 12px; padding: 9px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .order-out-h { font-size: 14px; font-weight: 800; color: var(--ink); letter-spacing: -0.2px; }
+  .order-out-s { font-size: 11.5px; color: var(--ink2); line-height: 1.45; }
+  .order-item { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11.5px; color: #4b4b54; }
+  .order-item span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .order-item b { font-weight: 700; color: var(--ink); flex: 0 0 auto; }
+  .order-more { font-size: 11px; color: var(--mute2); }
+  .order-out.warn { border-color: #f0dfc2; background: #fdf7ea; }
+  .order-out.bad { border-color: #f3d6d3; background: #fdf1ef; }
+
   .foot { font-size: 11.5px; color: var(--mute); line-height: 1.65; padding: 2px 2px 0; }
 
   .cursor {
@@ -575,6 +591,14 @@
           <div class="row"><div class="row-k">매출 가져오기</div><div class="row-v"><strong data-field="pc-sales">–</strong></div></div>
           <div class="row"><div class="row-k">그룹웨어 발주</div><div class="row-v"><strong data-field="pc-order">–</strong></div></div>
         </div>
+        <div class="order-now">
+          <div class="order-top">
+            <button class="mini-btn order-btn" type="button" id="btnOrderNow" aria-label="오늘 그룹웨어 발주 현황 확인">발주현황 확인</button>
+            <span class="order-when" id="orderWhen"></span>
+          </div>
+          <div class="lbar order-lbar" id="barOrder" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
+          <div class="order-out" id="orderOut" hidden></div>
+        </div>
         <div class="card-foot" data-field="pc-basis">기준 –</div>
       </div>
 
@@ -709,7 +733,8 @@
 (function () {
   "use strict";
 
-  var SHEET = "https://script.google.com/macros/s/AKfycbw56Q_Q3m0ZyZSHlAlRru2MZZ4-Lqj4tvfXFOfhH_YLi4HOiLn9Cj2yEbARK9LTk00t5Q/exec?api=1&status=1";
+  var API_BASE = "https://script.google.com/macros/s/AKfycbw56Q_Q3m0ZyZSHlAlRru2MZZ4-Lqj4tvfXFOfhH_YLi4HOiLn9Cj2yEbARK9LTk00t5Q/exec";
+  var SHEET = API_BASE + "?api=1&status=1";
   var GH = "https://api.github.com";
   var LL = "MFGKOREA/label-list";
   var HUB = "MFGKOREA/desk-widgets";
@@ -723,6 +748,9 @@
   var WATCHDOG_MS = 20000;       // 버튼·막대가 잠긴 채 남지 않게
   var MIN = 60000;
   var CACHE_KEY = "aihub.status.v2";
+  var ORDER_KEY = "aihub.order.v1";   // 오늘 그룹웨어 발주(misOrder.오늘) 캐시
+  var ORDER_TTL_MS = 600000;          // 전체 자료가 1.3MB라 10분에 한 번만 새로 받는다
+  var ORDER_TIMEOUT_MS = 15000;       // 주문현황 전체 읽기는 좀 더 기다린다
 
   var S = {
     sheet: { ok: false, at: null, data: null, err: null, stat: null, stale: false, timeout: false, lastOkAt: null },
@@ -736,7 +764,8 @@
     retryAt: 0,
     fails: { sheet: 0, ll: 0, hub: 0 },
     checks: null,
-    issAt: 0
+    issAt: 0,
+    order: { ok: false, at: null, key: null, n: null, rows: null, by: [], items: [], scanAt: null, dataAt: null, err: null, stale: false, loading: false, open: false }
   };
 
   var inFlight = {};
@@ -1223,20 +1252,180 @@
     return r;
   }
 
+  /* ---------------- 오늘 그룹웨어 발주 (misOrder.오늘) ----------------
+     발주앱이 그룹웨어로 넘긴 기록(misPush)은 매일 새로 생기지 않는다(휴무일 등).
+     그래서 오늘 실제로 넣은 발주는 시트의 "misOrder.오늘"(주문현황)로 본다.
+     공개 API에 키 하나만 읽는 파라미터가 없어 ?api=1 전체를 받아 필요한 키만 고른다. */
+
+  function todayKey() { return dayKey(Date.now()); }
+
+  /* misOrder.오늘 → 화면에 쓸 모양으로 */
+  function pickOrder(m) {
+    var rows = (m && Array.isArray(m.rows)) ? m.rows : [];
+    var out = [], cnt = {};
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (!r) continue;
+      var q = Number(r.qty);
+      if (!isFinite(q) || q <= 0) continue;
+      var dl = String(r.deliv || "").slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dl)) dl = "";
+      out.push({ name: String(r.name || "").trim(), qty: q, unit: String(r.unit || "").trim(), deliv: dl });
+      if (dl) cnt[dl] = (cnt[dl] || 0) + 1;
+    }
+    var days = Object.keys(cnt).sort(), by = [];
+    for (var j = 0; j < days.length; j++) by.push({ date: days[j], n: cnt[days[j]] });
+    return { n: out.length, rows: out, by: by };
+  }
+
+  /* 수량이 많은 것부터 몇 개 */
+  function orderTop(o, k) {
+    var a = (o && o.rows) ? o.rows.slice() : [];
+    a.sort(function (x, y) { return y.qty - x.qty; });
+    return a.slice(0, k || 3);
+  }
+
+  /* "11/17 입고 5건 · 11/18 입고 82건" */
+  function delivText(by) {
+    var b = by || [], parts = [];
+    for (var i = 0; i < b.length && i < 3; i++) parts.push(prettyDate(b[i].date) + " 입고 " + b[i].n + "건");
+    if (b.length > 3) parts.push("그 밖에 " + (b.length - 3) + "일");
+    return parts.join(" · ");
+  }
+
+  function readOrderCache(key) {
+    try {
+      var raw = localStorage.getItem(ORDER_KEY);
+      if (!raw) return null;
+      var c = JSON.parse(raw);
+      if (!c || c.key !== key) return null;   // 다른 날 것은 안 쓴다
+      return c;
+    } catch (e) { return null; }
+  }
+
+  function saveOrderCache() {
+    var o = S.order || {};
+    try {
+      localStorage.setItem(ORDER_KEY, JSON.stringify({
+        key: o.key, fetchedAt: o.at, n: o.n || 0, by: o.by || [], items: orderTop(o, 5),
+        scanAt: o.scanAt || null, dataAt: o.dataAt || null
+      }));
+    } catch (e) {}
+  }
+
+  function applyOrderCache(c) {
+    S.order = {
+      ok: true, at: Number(c.fetchedAt) || 0, key: c.key, n: Number(c.n) || 0,
+      rows: null, by: c.by || [], items: c.items || [],
+      scanAt: c.scanAt || null, dataAt: c.dataAt || null,
+      err: null, stale: true, loading: false, open: !!(S.order && S.order.open)
+    };
+  }
+
+  function loadOrderToday(force) {
+    var key = todayKey();
+    return once("order", function () {
+      /* 방금 받은 값이면 그대로 쓴다 (전체 자료가 커서 30초마다 받지 않는다) */
+      if (!force && S.order.ok && S.order.key === key && !S.order.stale && Date.now() - S.order.at < ORDER_TTL_MS) {
+        return Promise.resolve(S.order);
+      }
+      if (!force && !S.order.ok) {
+        var early = readOrderCache(key);
+        if (early && Date.now() - Number(early.fetchedAt || 0) < ORDER_TTL_MS) {
+          applyOrderCache(early);
+          return Promise.resolve(S.order);
+        }
+      }
+      var keepOpen = !!S.order.open;
+      S.order.loading = true;
+      return timedFetch(API_BASE + "?api=1&t=" + Date.now(), { cache: "no-store" }, ORDER_TIMEOUT_MS)
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (j) {
+          if (!j || !j.data) throw new Error(j && j.error ? String(j.error) : "형식");
+          var m = j.data["misOrder." + key] || null;
+          var scan = j.data.misOrderScan || null;
+          var p = pickOrder(m);
+          S.order = {
+            ok: true, at: Date.now(), key: key, n: p.n, rows: p.rows, by: p.by,
+            items: orderTop(p, 5),
+            scanAt: (scan && scan.at) || null, dataAt: (m && m.at) || null,
+            err: null, stale: false, loading: false, open: keepOpen
+          };
+          saveOrderCache();
+          return S.order;
+        })
+        .catch(function (e) {
+          var c = readOrderCache(key);
+          if (c) { applyOrderCache(c); S.order.err = String(e && e.message ? e.message : e); return S.order; }
+          S.order.ok = false;
+          S.order.loading = false;
+          S.order.err = String(e && e.message ? e.message : e);
+          throw e;
+        });
+    });
+  }
+
   function judgeOrder() {
     var mp = (S.sheet.stat || {}).misPush || {};
-    if (!mp.status) return { level: "mute", text: "정보 없음", why: "넘긴 기록이 없어요" };
+    var o = S.order || {};
+    var live = !!o.ok && o.key === todayKey();     // 오늘 주문현황을 실제로 읽었나
+    var n = live ? Number(o.n || 0) : -1;
     var w = stateWord(mp.status);
     var d = dayDiff(mp.date);
     var r;
-    if (w === "완료") {
-      if (d === null || d === 0) r = { level: "ok", text: "완료 · 오늘", why: "오늘 넘겼어요" };
-      else if (d === 1) r = { level: "warn", text: "어제 완료 · " + prettyDate(mp.date), why: "작업일 " + prettyDate(mp.date) + " · 오늘 것은 아직이에요" };
-      else r = { level: "bad", text: "오래됨 · " + prettyDate(mp.date), why: "작업일 " + prettyDate(mp.date) + " · " + d + "일 지났어요" };
-    } else if (w === "진행 중") {
+
+    /* 1) 지금 앱에서 넘기다 실패한 것만 '확인 필요' */
+    if (w === "실패" && (d === null || d === 0)) {
+      return staleJudge({ level: "bad", text: "실패", why: "그룹웨어로 넘기다 실패했어요 · 위 '다시 확인'을 눌러 다시 넘겨 보세요" });
+    }
+
+    /* 2) 오늘 그룹웨어에 실제로 넣은 발주가 있으면 그게 가장 정확하다 */
+    if (live && n > 0) {
+      var dl = delivText(o.by);
+      r = {
+        level: o.stale ? "warn" : "ok",
+        label: "그룹웨어 발주 정상",
+        text: "완료 · 오늘 (" + n + "건)",
+        why: (o.stale ? "지난 값 · " : "") + "그룹웨어 발주 " + n + "건 확인" + (dl ? " · " + dl : "")
+      };
+      return r;
+    }
+
+    /* 3) 지금 넘기는 중이면 그때만 시간으로 본다 */
+    if (w === "진행 중" && (d === null || d === 0)) {
       var age = mp.at ? (Date.now() - Number(mp.at)) / MIN : 0;
       var howLong2 = age < 60 ? Math.round(age) + "분째" : Math.round(age / 60) + "시간째";
       r = { level: age > 30 ? "bad" : "warn", text: "진행 중 · " + howLong2, why: howLong2 + " 하는 중이에요" };
+      return staleJudge(r);
+    }
+
+    /* 4) 오늘 주문현황을 봤는데 넣은 발주가 없다 (발주를 안 넣는 날도 있다 — 경고하지 않는다) */
+    if (live) {
+      r = {
+        level: o.stale ? "warn" : "ok",
+        label: "그룹웨어 발주 · 오늘 기록 없음",
+        text: "오늘 발주 없음",
+        why: (o.stale ? "지난 값 · " : "") + "오늘은 그룹웨어에 넣은 발주가 없어요 · " + hhmm(o.dataAt || o.at) + " 기준"
+      };
+      return r;
+    }
+
+    /* 5) 주문현황을 못 읽었으면 앱이 넘긴 기록으로 본다 */
+    if (w === "진행 중") {
+      var age2 = mp.at ? (Date.now() - Number(mp.at)) / MIN : 0;
+      var howLong3 = age2 < 60 ? Math.round(age2) + "분째" : Math.round(age2 / 60) + "시간째";
+      r = { level: age2 > 30 ? "bad" : "warn", text: "진행 중 · " + howLong3, why: howLong3 + " 하는 중이에요" };
+    } else if (w === "완료") {
+      /* 발주는 휴무일처럼 넣지 않는 날이 있다 — 며칠 전 완료라는 이유만으로 경고하지 않는다 */
+      if (d === null || d === 0) r = { level: "ok", text: "완료 · 오늘", why: "오늘 넘겼어요" };
+      else r = { level: "ok", text: "완료 · " + prettyDate(mp.date), why: "마지막 발주 완료 · 새 요청 없음" };
+    } else if (w === "실패") {
+      r = { level: "warn", text: "실패 · " + prettyDate(mp.date), why: "작업일 " + prettyDate(mp.date) + " · 앱에서 넘기지 못했어요" };
+    } else if (!mp.status) {
+      return { level: "mute", text: "정보 없음", why: "넘긴 기록이 없어요" };
     } else if (w === "알 수 없음") {
       r = { level: "warn", text: "알 수 없음", why: "위 '다시 확인'을 눌러 주세요" };
     } else {
@@ -1282,11 +1471,11 @@
     else if (sj.level === "warn") add("warn", "매출 가져오기를 다시 볼 때예요", sj.why, { retry: "pc" });
     else add("bad", "매출 가져오기가 안 됐어요", sj.why, { retry: "pc" });
 
-    /* 3. 그룹웨어 발주 */
+    /* 3. 그룹웨어 발주 (오늘 실제 넣은 발주를 먼저 본다 · 완료 기록이면 경고하지 않는다) */
     var oj = judgeOrder();
-    if (oj.level === "mute") add("warn", "그룹웨어 발주 기록이 없어요", "아직 넘긴 것이 없어요", { retry: "pc" });
-    else if (oj.level === "ok") add("ok", "그룹웨어 발주 완료", oj.why, { retry: "pc" });
-    else if (oj.level === "warn") add("warn", "그룹웨어 발주를 다시 볼 때예요", oj.why, { retry: "pc" });
+    if (oj.level === "ok") add("ok", oj.label || "그룹웨어 발주 정상", oj.why, { retry: "pc" });
+    else if (oj.level === "mute") add("warn", "그룹웨어 발주 기록이 없어요", "아직 넘긴 것이 없어요", { retry: "pc" });
+    else if (oj.level === "warn") add("warn", oj.label || "그룹웨어 발주를 다시 볼 때예요", oj.why, { retry: "pc" });
     else add("bad", "그룹웨어 발주가 안 됐어요", oj.why, { retry: "pc" });
 
     /* 4. 승인 기다리는 수정 */
@@ -1399,6 +1588,55 @@
 
   /* ---------------- 화면 그리기 ---------------- */
 
+  /* 오늘 발주 확인 칸 (버튼을 누르면 자세히 보여 준다) */
+  function renderOrderBlock() {
+    var o = S.order || {};
+    var key = todayKey();
+    var live = !!o.ok && o.key === key;
+    var btn = $("btnOrderNow"), out = $("orderOut");
+    if (!out) return;
+
+    if (btn && !btn.classList.contains("loading") && !btn.classList.contains("done")) {
+      if (!btn.getAttribute("data-base")) btn.setAttribute("data-base", "발주현황 확인");
+      if (btn.textContent !== btn.getAttribute("data-base")) btn.textContent = btn.getAttribute("data-base");
+    }
+
+    if (!live) {
+      setText("orderWhen", o.err ? "발주현황을 못 봤어요" : "");
+    } else if (o.n > 0) {
+      setText("orderWhen", (o.stale ? "지난 값 · " : "") + "오늘 " + o.n + "건 · " + hhmm(o.dataAt || o.at) + " 기준");
+    } else {
+      setText("orderWhen", (o.stale ? "지난 값 · " : "") + "오늘 기록 없음 · " + hhmm(o.dataAt || o.at) + " 기준");
+    }
+
+    if (!o.open) { out.hidden = true; out.textContent = ""; return; }
+    out.hidden = false;
+    out.className = "order-out" + (o.stale ? " warn" : (live ? "" : " bad"));
+    out.textContent = "";
+
+    if (!live) {
+      out.appendChild(mk("div", "order-out-h", o.loading ? "발주현황을 확인하고 있어요" : "발주현황을 못 봤어요"));
+      out.appendChild(mk("div", "order-more", "잠시 뒤 다시 눌러 주세요"));
+      return;
+    }
+    if (o.n > 0) {
+      out.appendChild(mk("div", "order-out-h", "오늘(" + prettyDate(key) + ") 발주 " + o.n + "건"));
+      var dl = delivText(o.by);
+      if (dl) out.appendChild(mk("div", "order-out-s", dl));
+      var top = (o.rows && o.rows.length) ? orderTop(o, 3) : (o.items || []).slice(0, 3);
+      for (var i = 0; i < top.length; i++) {
+        var it = top[i], row = mk("div", "order-item");
+        row.appendChild(mk("span", null, it.name || "품목"));
+        row.appendChild(mk("b", null, it.qty + (it.unit ? " " + it.unit : "")));
+        out.appendChild(row);
+      }
+      if (o.n > top.length) out.appendChild(mk("div", "order-more", "그 밖에 " + (o.n - top.length) + "건 더 있어요"));
+    } else {
+      out.appendChild(mk("div", "order-out-h", "오늘 발주 기록 없음"));
+      out.appendChild(mk("div", "order-out-s", "그룹웨어 주문현황을 " + hhmm(o.dataAt || o.at) + "에 봤어요 · 넣은 발주가 없습니다"));
+    }
+  }
+
   function render() {
     var now = Date.now();
     var st = S.sheet.stat || {};
@@ -1426,6 +1664,7 @@
     setFieldTip("pc-sales", sj.text, sj.level === "mute" ? "c-mute" : "c-" + sj.level, sj.why);
     var oj = judgeOrder();
     setFieldTip("pc-order", oj.text, oj.level === "mute" ? "c-mute" : "c-" + oj.level, oj.why);
+    renderOrderBlock();
 
     /* 발주·라벨앱 */
     if (S.ll.at) {
@@ -2348,6 +2587,8 @@
     var jobs = [];
 
     jobs.push(loadSheet().catch(function () { return null; }));
+    /* 오늘 실제 발주는 자료가 커서(1.3MB) 화면 첫 확인을 붙잡지 않게 따로 받는다 */
+    loadOrderToday(!!forceGithub).then(function () { render(); }, function () { render(); });
 
     if (ghDue) {
       S.nextGhAt = now + GH_TTL_MS;
@@ -2387,7 +2628,10 @@
     var p;
 
     if (kind === "pc") {
-      p = loadSheet().then(function () {
+      p = Promise.all([
+        loadSheet(),
+        loadOrderToday(true).catch(function () { return null; })   // 오늘 실제 발주도 함께 새로 본다
+      ]).then(function () {
         S.lastSync = Date.now(); render();
         showToast("매장 컴퓨터를 다시 확인했어요");
       }).catch(function () {
@@ -2504,6 +2748,35 @@
     });
   }
 
+  /* 오늘 발주현황 확인 버튼 */
+  var orderBtn = $("btnOrderNow");
+  if (orderBtn) {
+    orderBtn.addEventListener("click", function () {
+      if (orderBtn.classList.contains("loading")) return;
+      var bar = barRun($("barOrder"));
+      lockBtn(orderBtn);
+      S.order.open = true;
+      renderOrderBlock();
+      var watchdog = setTimeout(function () {
+        if (orderBtn.classList.contains("loading")) resetBtn(orderBtn);
+        barDone(bar, false);
+      }, WATCHDOG_MS);
+      loadOrderToday(true).then(function (o) {
+        clearTimeout(watchdog);
+        S.lastSync = Date.now();
+        render();
+        showToast(o && o.n > 0 ? "오늘 발주 " + o.n + "건 확인했어요" : "오늘은 넣은 발주가 없어요");
+        return barDone(bar, true).then(function () { doneBtn(orderBtn); });
+      }, function () {
+        clearTimeout(watchdog);
+        S.lastSync = Date.now();
+        render();
+        showToast("지금은 오늘 발주현황을 못 봤어요");
+        return barDone(bar, false).then(function () { resetBtn(orderBtn); });
+      });
+    });
+  }
+
   /* ---------------- 시간 표시 · 자동 확인 ---------------- */
 
   function updateLiveBits(now) {
@@ -2617,6 +2890,8 @@
   function boot() {
     updateKeyBtn();
     restoreCache();
+    var oc = readOrderCache(todayKey());
+    if (oc) applyOrderCache(oc);      // 오늘 발주는 지난 값이라도 먼저 보여 준다
     S.nextGhAt = 0;                 // 첫 확인은 바로
     nextAutoAt = Date.now() + AUTO_SEC * 1000;
     if (S.sheet.stat || S.ll.at || S.hub.at) render();   // 지난 값을 먼저 보여준다
