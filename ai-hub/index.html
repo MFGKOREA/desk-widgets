@@ -1473,7 +1473,12 @@
             hrAt: Number(hrS.at || 0) || null,
             agentVer: sm.ver ? String(sm.ver) : null,
             salesText: spS.text ? String(spS.text) : null,
-            salesAt: Number(spS.doneAt || spS.at || 0) || null
+            salesAt: Number(spS.doneAt || spS.at || 0) || null,
+            salesId: spS.id ? String(spS.id) : null,
+            salesKind: spS.kind || null,
+            salesFrom: spS.from || null,
+            salesTo: spS.to || null,
+            salesStatus: spS.status || null
           };
           S.order = {
             ok: true, at: Date.now(), key: key, n: p.n, rows: p.rows, by: p.by,
@@ -1569,6 +1574,7 @@
 
   var KIND_WORD = { now: "매출", orders: "발주현황" };
   var pcJob = null;      // 지금 따라가는 요청 {kind, id, t0, timer, btn, bar}
+  var lastSentId = null; // 이 화면이 마지막으로 보낸 요청 id
 
   function readStatusNow() {
     return timedFetch(SHEET + "&t=" + Date.now(), { cache: "no-store" }, SHEET_TIMEOUT_MS)
@@ -1615,6 +1621,19 @@
     if (!el) return;
     el.textContent = text || "";
     el.className = "flow-msg" + (bad ? " bad" : "");
+  }
+
+  /* 지금은 다른 일을 하고 있어 그냥 지켜보기만 할 때 (오류 아님) */
+  function flowNote(text) {
+    var j = pcJob;
+    pcJob = null;
+    if (j && j.timer) clearTimeout(j.timer);
+    if (j && j.btn) { j.btn.disabled = false; j.btn.classList.remove("loading"); }
+    if (j && j.bar) barDone(j.bar, true);
+    flowStep(2);
+    flowMsg(text);
+    render();
+    setTimeout(function () { if (!pcJob) { var p = $("salesFlow"); if (p) p.hidden = true; } }, 9000);
   }
 
   function flowStart(kind, btn) {
@@ -1681,6 +1700,7 @@
   function pcSend(kind) {
     var d = todayKey();
     var value = { id: Date.now(), at: Date.now(), kind: kind, status: "pending", from: d, to: d };
+    lastSentId = String(value.id);
     pcJob.id = value.id;
     pcJob.t0 = value.at;
     flowStep(2);
@@ -1743,6 +1763,13 @@
       loadOrderToday(true).catch(function () { return null; })
     ]).then(function () {
       var txt = (S.kv && S.kv.salesText) ? String(S.kv.salesText).split("\n")[0] : "";
+      /* 끝난 일이 정말 이 버튼이 시킨 일인지 확인 (매장 PC가 스스로 받은 매출일 수 있다) */
+      var known = S.kv.at && Date.now() - Number(S.kv.at) < 120000;
+      var mine = !known || !S.kv.salesKind || S.kv.salesKind === kind;
+      if (ok && !mine) {
+        flowNote("매장 PC가 다른 일을 마쳤어요 · 끝났으니 다시 눌러 주세요");
+        return;
+      }
       if (ok) {
         if (kind === "orders") S.order.open = true;
         /* 매출 금액은 화면에 쓰지 않는다(아래 안내문과 같은 약속) — 완료·시각만 보여 준다 */
@@ -1761,8 +1788,20 @@
     readStatusNow().then(function (j) {
       if (!pcJob) return;
       var st = j.status || {}, sp = st.salesPush || {};
-      /* 이미 돌고 있으면 새로 시키지 않고 그 일을 따라간다 */
+      /* 이미 돌고 있으면 새로 시키지 않고 그 일을 따라간다.
+         다만 그 일이 '내가 시키려던 바로 그 일'인지 확인한다 (매장 PC는 스스로도 매출을 받는다). */
       if (spAlive(sp)) {
+        var d = todayKey(), sid = String(sp.id), k = S.kv || {};
+        var same;
+        if (lastSentId && sid === String(lastSentId)) same = true;                 // 내가 방금 보낸 일
+        else if (k.salesId && sid === String(k.salesId)) {                        // 마지막으로 본 그 일
+          same = (k.salesKind === kind || !k.salesKind) && (!k.salesTo || String(k.salesTo) === d);
+        } else same = !k.salesId && !lastSentId;                                  // 아직 아무것도 모를 때
+        if (!same) {
+          var what = k.salesKind ? (KIND_WORD[k.salesKind] || "다른 일") : "다른 요청";
+          flowNote("매장 PC가 지금 " + what + "을 처리 중이에요 · 끝나면 다시 눌러 주세요");
+          return;
+        }
         pcJob.id = Number(sp.id || 0);
         pcJob.t0 = Number(sp.at || Date.now());
         flowStep(sp.status === "running" ? 2 : 1);
