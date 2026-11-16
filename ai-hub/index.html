@@ -2678,7 +2678,7 @@
     panel.setAttribute("data-level", level);
     panel.setAttribute("aria-label", STAT_WORD[level] + " 항목 " + list.length + "건");
     setText("spTitle", STAT_WORD[level] + " 항목");
-    setText("spN", list.length + "건");
+    setText("spN", S.checks ? list.length + "건" : "–");
     var note = $("spNote");
     if (note) {
       note.textContent = list.length ? STAT_NOTE[level] : "";
@@ -2687,6 +2687,11 @@
 
     if (!rows) return;
     rows.innerHTML = "";
+    /* 아직 첫 확인 전이면 0건이라고 하지 않는다 */
+    if (!S.checks) {
+      rows.innerHTML = '<div class="empty">지금 확인하는 중이에요. 잠시만요.</div>';
+      return;
+    }
     if (!list.length) {
       rows.innerHTML = '<div class="empty">' + STAT_EMPTY[level] + ' 위 카드를 다시 누르면 닫힐게요.</div>';
       return;
