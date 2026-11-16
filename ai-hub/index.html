@@ -330,6 +330,10 @@
   .act-btn.loading { opacity: 0.72; }
   .act-btn.done { background: #14532d; border-color: #14532d; opacity: 1; }
   .act-btn:disabled { cursor: default; }
+  .act-btn.sm { font-size: 12px; min-height: 30px; padding: 0 13px; }
+  .go-btn.ghost { background: #fff; color: #4b4b54; border-color: var(--btn-line); }
+  .go-btn.ghost:active { background: var(--btn-bg); }
+  .sheet-box .task-list { margin-top: 2px; }
   .act-link {
     font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--mute2);
     background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline;
@@ -585,6 +589,7 @@
     .sheet-ok { color: #86efac; }
     .go-btn { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
     .go-btn:active { background: #1c2d52; }
+    .go-btn.ghost { background: #1b1b1d; color: #d6d4cd; border-color: #3a3a3f; }
     .lbar-in b { background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.45), rgba(255,255,255,0)); }
     .status-banner { background: #242422; border-bottom-color: #34342f; }
     .status-banner.ok { background: #14532d; border-bottom-color: #166534; }
@@ -631,7 +636,7 @@
   <div class="body">
 
     <div class="hero">
-      <div class="hero-k">점검 <strong id="heroTotal">8</strong>가지 · 매장 <strong id="heroStore">6</strong> · 이 화면 <span id="heroSelf">2</span> · <span id="heroWhen">지금 확인 중</span></div>
+      <div class="hero-k">점검 <strong id="heroTotal">8</strong>가지 · 매장·AI <strong id="heroStore">6</strong> · 이 화면 <span id="heroSelf">2</span> · <span id="heroWhen">지금 확인 중</span></div>
       <div class="hero-stats">
         <div class="stat ok"><div class="stat-n"><span id="heroOkNumber">–</span><span class="stat-u">개</span></div><div class="stat-k">정상</div></div>
         <div class="stat warn"><div class="stat-n"><span id="heroWarnNumber">–</span><span class="stat-u">개</span></div><div class="stat-k">주의</div></div>
@@ -837,8 +842,17 @@
   var PL = "MFGKOREA/pl-dashboard";     // 비공개 — 인증 키가 있어야 상태를 봄
   var HRB = "MFGKOREA/hr-board";        // 비공개 — 인증 키가 있어야 상태를 봄
 
+  /* 승인·진행을 여는 저장소 — 발주앱은 아래 loadLabelList/loadIssues 가, 나머지는 loadRepoBoard 가 맡는다 */
+  var REPO_LL  = { id: "ll",  full: LL,  short: "발주앱", badge: "proj-label" };
+  var REPO_HUB = { id: "hub", full: HUB, short: "허브",   badge: "proj-hub" };
+  var REPO_PL  = { id: "pl",  full: PL,  short: "PL보드", badge: "proj-label", priv: true };
+  var REPO_HRB = { id: "hrb", full: HRB, short: "HR보드", badge: "proj-pc",    priv: true };
+  var REPO_LIST = [REPO_LL, REPO_HUB, REPO_PL, REPO_HRB];
+
   var AUTO_SEC = 30;             // 매장 컴퓨터는 30초마다
   var GH_TTL_MS = 600000;        // 코드 저장소는 10분에 한 번 (시간당 60회 한도 보호)
+  var EXTRA_TTL_MS = 1800000;    // 비공개 저장소(PL·HR)는 30분에 한 번 (한도 아껴 쓰기)
+  var ASIDE_TTL_MS = 1800000;    // AI 공용 게시판 할 일 목록도 30분에 한 번
   var ISSUE_TTL_MS = 600000;     // 목록은 펼칠 때 한 번
   var SHEET_TIMEOUT_MS = 8000;   // 8초 넘게 대답이 없으면 실패로 본다
   var GH_TIMEOUT_MS = 10000;
@@ -873,7 +887,9 @@
     issAt: 0,
     order: { ok: false, at: null, key: null, n: null, rows: null, by: [], items: [], scanAt: null, dataAt: null, err: null, stale: false, loading: false, open: false },
     kv: { at: null, hrAt: null, agentVer: null, salesText: null, salesAt: null },
-    apps: { at: null, pl: null, hr: null, noKey: false, err: null }
+    apps: { at: null, pl: null, hr: null, noKey: false, err: null },
+    repos: {},                                   // 저장소별 열린 PR·이슈
+    aside: { at: 0, ok: false, err: null, pending: [] }
   };
 
   var inFlight = {};
@@ -1095,9 +1111,13 @@
 
   function RateError(msg) { var e = new Error(msg); e.name = "RateError"; return e; }
 
-  function ghJSON(url, force) {
+  function ghJSON(url, force, pat) {
     var c = etags[url];
     var headers = { "Accept": "application/vnd.github+json" };
+    if (pat) {
+      headers["Authorization"] = "Bearer " + pat;
+      headers["X-GitHub-Api-Version"] = "2022-11-28";
+    }
     if (c && c.etag && !force) headers["If-None-Match"] = c.etag;
     return timedFetch(url, { headers: headers, cache: "no-store" }, GH_TIMEOUT_MS).then(function (r) {
       var rem = r.headers.get("x-ratelimit-remaining");
@@ -1159,7 +1179,7 @@
     });
   }
 
-  function taskOf(x) {
+  function taskOf(x, repo) {
     var labels = [];
     if (x && Array.isArray(x.labels)) {
       for (var i = 0; i < x.labels.length; i++) {
@@ -1168,7 +1188,7 @@
         if (nm) labels.push(nm);
       }
     }
-    return {
+    var it = {
       number: Number(x && x.number) || 0,
       title: String((x && x.title) || "").trim(),
       url: (x && x.html_url) || "",
@@ -1178,6 +1198,23 @@
       body: String((x && x.body) || "").slice(0, 1500),
       labels: labels
     };
+    if (repo) {
+      it.repoId = repo.id;
+      it.repoFull = repo.full;
+      it.repoShort = repo.short;
+      it.repoBadge = repo.badge || "proj-label";
+    }
+    return it;
+  }
+
+  /* 어느 저장소의 항목인지 표시해 둔다 (배지·합치기 주소에 쓴다) */
+  function tagRepo(it, repo) {
+    if (!it || !repo) return it;
+    it.repoId = repo.id;
+    it.repoFull = repo.full;
+    it.repoShort = repo.short;
+    it.repoBadge = repo.badge || "proj-label";
+    return it;
   }
 
   /* 그록봇이 남긴 기록인지 (제목 표시·계정 이름으로만 구분) */
@@ -1214,7 +1251,7 @@
         var prs = pulls.length;
         var openAll = Number(repo.open_issues_count || 0);
         var prItems = [];
-        for (var a = 0; a < pulls.length; a++) prItems.push(taskOf(pulls[a]));
+        for (var a = 0; a < pulls.length; a++) prItems.push(tagRepo(taskOf(pulls[a], REPO_LL), REPO_LL));
 
         S.ll = {
           ok: true,
@@ -1234,6 +1271,13 @@
           asideAt: asideAt ? new Date(asideAt).toISOString() : null
         };
         S.fails.ll = 0;
+        var keptIssues = null;
+        if (S.repos.ll && Array.isArray(S.repos.ll.issues)) keptIssues = S.repos.ll.issues;
+        else if (S.ll.items && Array.isArray(S.ll.items.issues)) keptIssues = S.ll.items.issues;
+        S.repos.ll = {
+          at: Date.now(), ok: true, err: null, noKey: false,
+          prs: prItems, issues: keptIssues || [], issuesAt: (S.repos.ll && S.repos.ll.issuesAt) || null
+        };
         saveCache();
         return S.ll;
       }).catch(function (e) {
@@ -1266,9 +1310,12 @@
             if (list[k] && !list[k].pull_request) only.push(list[k]);
           }
           var items = [];
-          for (var b = 0; b < only.length; b++) items.push(taskOf(only[b]));
+          for (var b = 0; b < only.length; b++) items.push(tagRepo(taskOf(only[b], REPO_LL), REPO_LL));
           S.ll.items = S.ll.items || {};
           S.ll.items.issues = items;
+          if (!S.repos.ll) S.repos.ll = { at: Date.now(), ok: true, err: null, noKey: false, prs: [] };
+          S.repos.ll.issues = items;
+          S.repos.ll.issuesAt = Date.now();
           S.ll.issuesExact = only.length;
           S.ll.issues = only.length;
           S.ll.issuesAt = Date.now();
@@ -1341,6 +1388,114 @@
         err: null
       };
       return S.apps;
+    });
+  }
+
+  /* ---------------- 다른 저장소의 열린 PR·이슈 (원탭 승인 대상) ----------------
+     /issues?state=open 한 번이면 PR과 이슈가 함께 온다(PR 은 pull_request 필드로 구분).
+     비공개 저장소(PL보드·HR보드)는 인증 키가 있을 때만 보고, 키가 없으면 '키 필요'로 남긴다. */
+
+  function loadRepoBoard(repo, force) {
+    var st = S.repos[repo.id] || (S.repos[repo.id] = { at: 0, ok: false, err: null, noKey: false, prs: [], issues: [], issuesAt: 0 });
+    if (!force && st.at && Date.now() - st.at < (repo.priv ? EXTRA_TTL_MS : GH_TTL_MS)) return Promise.resolve(st);
+    var pat = repo.priv ? getPat() : null;
+    if (repo.priv && !pat) {
+      st.at = Date.now(); st.ok = false; st.noKey = true; st.err = "key";
+      return Promise.resolve(st);
+    }
+    return once("repo:" + repo.id, function () {
+      return ghJSON(GH + "/repos/" + repo.full + "/issues?state=open&per_page=100&sort=updated&direction=desc", force, pat)
+        .then(function (raw) {
+          var list = Array.isArray(raw) ? raw : [];
+          var prs = [], iss = [];
+          for (var i = 0; i < list.length; i++) {
+            var x = list[i];
+            if (!x || !x.number) continue;
+            var it = tagRepo(taskOf(x, repo), repo);
+            if (x.pull_request) prs.push(it); else iss.push(it);
+          }
+          prs.sort(byUpdated); iss.sort(byUpdated);
+          st.prs = prs; st.issues = iss; st.at = Date.now();
+          st.ok = true; st.err = null; st.noKey = false; st.issuesAt = Date.now();
+          return st;
+        })
+        .catch(function (e) {
+          st.err = String(e && e.message ? e.message : e);
+          if (!st.at) st.ok = false;
+          throw e;
+        });
+    });
+  }
+
+  function byUpdated(a, b) {
+    return (new Date(b.updated_at || b.updatedAt || 0).getTime() || 0) -
+           (new Date(a.updated_at || a.updatedAt || 0).getTime() || 0);
+  }
+
+  function refreshRepos(force) {
+    var jobs = [];
+    for (var i = 0; i < REPO_LIST.length; i++) {
+      var r = REPO_LIST[i];
+      if (r.id === "ll") continue;          // 발주앱은 loadLabelList·loadIssues 가 맡는다
+      jobs.push(loadRepoBoard(r, force).catch(function () { return null; }));
+    }
+    return Promise.all(jobs);
+  }
+
+  /* ---------------- AI 공용 게시판(docs/aside)에서 '상태: 대기' 인 할 일만 훑는다 ----------------
+     폴더 목록 1번 + 파일 몇 개(raw)만 읽어 GitHub API 한도를 거의 쓰지 않는다.
+     상태를 바꾸는 일은 저장소에 커밋이 남으므로 여기서는 목록만 보여준다. */
+
+  function parseAsideTask(name, text) {
+    var t = String(text || "");
+    var mStatus = t.match(/^\s*상태\s*[:：]\s*(.+)$/m);
+    var mTo = t.match(/^\s*받는 사람\s*[:：]\s*(.+)$/m);
+    var mFrom = t.match(/^\s*보낸 사람\s*[:：]\s*(.+)$/m);
+    var mTitle = t.match(/^\s*#\s+(.+)$/m);
+    return {
+      name: name,
+      title: mTitle ? String(mTitle[1]).replace(/^\[Task\]\s*/i, "").trim() : name,
+      status: mStatus ? String(mStatus[1]).trim() : "",
+      to: mTo ? String(mTo[1]).trim() : "",
+      from: mFrom ? String(mFrom[1]).trim() : "",
+      url: "https://github.com/" + LL + "/blob/main/docs/aside/tasks/" + encodeURIComponent(name)
+    };
+  }
+
+  function loadAside(force) {
+    if (!force && S.aside.at && Date.now() - S.aside.at < ASIDE_TTL_MS) return Promise.resolve(S.aside);
+    return once("aside", function () {
+      return timedFetch(GH + "/repos/" + LL + "/contents/docs/aside/tasks?ref=main&t=" + Date.now(), {
+        headers: { "Accept": "application/vnd.github+json" }, cache: "no-store"
+      }, GH_TIMEOUT_MS).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).then(function (list) {
+        var files = [];
+        for (var i = 0; Array.isArray(list) && i < list.length; i++) {
+          var f = list[i];
+          if (!f || f.type !== "file" || !/^task-.*\.md$/i.test(String(f.name || ""))) continue;
+          files.push(f);
+        }
+        files.sort(function (a, b) { return String(b.name).localeCompare(String(a.name)); });
+        files = files.slice(0, 8);
+        return Promise.all(files.map(function (f) {
+          var raw = f.download_url || ("https://raw.githubusercontent.com/" + LL + "/main/docs/aside/tasks/" + encodeURIComponent(f.name));
+          return timedFetch(raw, { cache: "no-store" }, GH_TIMEOUT_MS)
+            .then(function (r2) { return r2.ok ? r2.text() : ""; }, function () { return ""; })
+            .then(function (txt) { return parseAsideTask(f.name, txt); });
+        }));
+      }).then(function (tasks) {
+        var pending = [];
+        for (var i = 0; i < tasks.length; i++) {
+          if (/^(대기|승인 ?대기|요청)/.test(String(tasks[i].status || ""))) pending.push(tasks[i]);
+        }
+        S.aside = { at: Date.now(), ok: true, err: null, pending: pending };
+        return S.aside;
+      }).catch(function (e) {
+        S.aside = { at: Date.now(), ok: false, err: String(e && e.message ? e.message : e), pending: (S.aside && S.aside.pending) || [] };
+        throw e;
+      });
     });
   }
 
@@ -1877,7 +2032,7 @@
       opt = opt || {};
       out.push({
         level: clampLevel(level), label: label, detail: detail || "",
-        act: opt.act || null, retry: opt.retry || null, self: !!opt.self
+        act: opt.act || null, repo: opt.repo || null, retry: opt.retry || null, self: !!opt.self
       });
     }
 
@@ -1918,9 +2073,9 @@
     if (S.ll.at) {
       var prs = Number(S.ll.prs || 0);
       var prsBase = prs === 0 ? "기다리는 수정이 없어요" : "승인만 하면 바로 반영돼요";
-      if (S.ll.stale) add("warn", "발주앱 수정 상태가 지난 값이에요", prsBase + " · 기준 " + hhmm(S.ll.at), { act: "prs", retry: "ll" });
-      else if (prs === 0) add("ok", "발주앱 수정 모두 반영됨", prsBase, { act: "prs" });
-      else add("warn", "발주앱 수정 승인 대기 " + prs + "건", prsBase, { act: "prs" });
+      if (S.ll.stale) add("warn", "발주앱 수정 상태가 지난 값이에요", prsBase + " · 기준 " + hhmm(S.ll.at), { act: "prs", repo: "ll", retry: "ll" });
+      else if (prs === 0) add("ok", "발주앱 수정 모두 반영됨", prsBase, { act: "prs", repo: "ll" });
+      else add("warn", "발주앱 수정 승인 대기 " + prs + "건", prsBase, { act: "prs", repo: "ll" });
     } else {
       add("bad", "발주앱 수정 상태를 못 봤어요", "잠시 뒤 다시 확인할게요", { retry: "ll" });
     }
@@ -1929,12 +2084,26 @@
     if (S.ll.at) {
       var iss = Number(S.ll.issues || 0);
       var issD = iss === 0 ? "남은 게 없어요" : "고칠 일이 " + iss + "건 쌓여 있어요";
-      if (S.ll.stale) add("warn", "발주앱 할 일 상태가 지난 값이에요", issD + " · 기준 " + hhmm(S.ll.at), { act: "issues", retry: "ll" });
-      else if (iss === 0) add("ok", "발주앱 할 일 정리됨", issD, { act: "issues" });
-      else if (iss < 10) add("warn", "발주앱 남은 할 일 " + iss + "건", issD, { act: "issues" });
-      else add("bad", "발주앱 남은 할 일 " + iss + "건", "많이 쌓였어요. 하나씩 줄여요", { act: "issues" });
+      if (S.ll.stale) add("warn", "발주앱 할 일 상태가 지난 값이에요", issD + " · 기준 " + hhmm(S.ll.at), { act: "issues", repo: "ll", retry: "ll" });
+      else if (iss === 0) add("ok", "발주앱 할 일 정리됨", issD, { act: "issues", repo: "ll" });
+      else if (iss < 10) add("warn", "발주앱 남은 할 일 " + iss + "건", issD, { act: "issues", repo: "ll" });
+      else add("bad", "발주앱 남은 할 일 " + iss + "건", "많이 쌓였어요. 하나씩 줄여요", { act: "issues", repo: "ll" });
     } else {
       add("bad", "발주앱 할 일을 못 봤어요", "잠시 뒤 다시 확인할게요", { retry: "ll" });
+    }
+
+    /* 5-1. 다른 저장소(허브·PL보드·HR보드)의 열린 수정·할 일 — 있을 때만 한 줄 */
+    for (var ri = 1; ri < REPO_LIST.length; ri++) {
+      var rp = REPO_LIST[ri], rs = S.repos[rp.id];
+      if (!rs || rs.noKey || (!rs.ok && !rs.at)) continue;
+      var rPrs = (rs.prs || []).length, rIss = (rs.issues || []).length;
+      if (rPrs) add("warn", rp.short + " 수정 승인 대기 " + rPrs + "건", "승인만 하면 바로 반영돼요", { act: "prs", repo: rp.id });
+      if (rIss) add("warn", rp.short + " 남은 할 일 " + rIss + "건", "눌러서 바로 진행을 요청할 수 있어요", { act: "issues", repo: rp.id });
+    }
+
+    /* 5-2. AI 공용 게시판에서 승인을 기다리는 작업 */
+    if (S.aside && S.aside.pending && S.aside.pending.length) {
+      add("warn", "AI 작업 요청 " + S.aside.pending.length + "건 대기", S.aside.pending[0].title, { act: "aside" });
     }
 
     /* 6. 발주앱 마지막 수정 */
@@ -2339,12 +2508,13 @@
     k.textContent = item.label + (item.self ? " (이 화면)" : "");
     left.appendChild(k);
 
-    var items = item.act ? itemsOf(item.act) : [];
+    var kind = item.act === "prs" ? "prs" : (item.act === "issues" ? "issues" : null);
+    var items = kind ? itemsOfRepo(kind, item.repo) : [];
     var top = items.length ? items[0] : null;
     var detail = item.detail;
     if (top) {
       left.className = "row-line clamp";
-      detail = "#" + top.number + " · " + (top.title || "(제목 없음)") +
+      detail = "#" + top.number + " · " + cleanTitle(top) +
         (items.length > 1 ? " 외 " + (items.length - 1) + "건" : "");
     }
     if (detail) {
@@ -2353,18 +2523,39 @@
       d.textContent = detail;
       left.appendChild(d);
     }
-    if (top && top.url) {
-      var acts = document.createElement("div");
-      acts.className = "row-acts";
-      var go = document.createElement("a");
-      go.className = "go-btn small";
-      go.href = top.url;
-      go.target = "_blank";
-      go.rel = "noopener";
-      go.textContent = "GitHub에서 보기";
-      acts.appendChild(go);
-      left.appendChild(acts);
+
+    /* 그 자리에서 바로 승인·진행 — 아래 어플 관리를 펼치지 않아도 된다 */
+    var acts = document.createElement("div");
+    acts.className = "row-acts";
+    if (kind && top) {
+      var st0 = actOf(kind, top);
+      var btn = mk("button", "act-btn sm");
+      btn.type = "button";
+      btn.setAttribute("data-run", kind === "prs" ? "pr" : "issue");
+      if (st0 && st0.state === "merged") {
+        btn.textContent = "✓ 승인 완료";
+        btn.classList.add("done");
+        btn.disabled = true;
+      } else if (st0 && st0.state === "requested") {
+        btn.textContent = "✓ 진행 요청됨";
+        btn.classList.add("done");
+        btn.disabled = true;
+      } else {
+        btn.textContent = kind === "prs" ? "바로 승인" : "진행 시키기";
+        btn.addEventListener("click", function () { runAction(kind, top, btn); });
+      }
+      acts.appendChild(btn);
+      var more = mk("button", "go-btn small ghost", "자세히");
+      more.type = "button";
+      more.addEventListener("click", function () { detailSheet(kind, { repoId: item.repo || null }); });
+      acts.appendChild(more);
+    } else if (item.act === "aside") {
+      var moreA = mk("button", "go-btn small ghost", "자세히");
+      moreA.type = "button";
+      moreA.addEventListener("click", asideSheet);
+      acts.appendChild(moreA);
     }
+    if (acts.children.length) left.appendChild(acts);
 
     var v = document.createElement("div");
     v.className = "row-v";
@@ -2471,8 +2662,32 @@
   var openLists = { prs: false, issues: false };
 
   function itemsOf(kind) {
-    var it = (S.ll && S.ll.items) || {};
-    return Array.isArray(it[kind]) ? it[kind] : [];
+    var out = [], seeded = false;
+    for (var i = 0; i < REPO_LIST.length; i++) {
+      var st = S.repos[REPO_LIST[i].id];
+      if (!st) continue;
+      seeded = true;
+      var arr = kind === "prs" ? st.prs : st.issues;
+      if (Array.isArray(arr)) out = out.concat(arr);
+    }
+    if (!seeded) {
+      var it = (S.ll && S.ll.items) || {};
+      var list = Array.isArray(it[kind]) ? it[kind] : [];
+      for (var k = 0; k < list.length; k++) out.push(tagRepo(list[k], REPO_LL));
+    }
+    out.sort(function (a, b) { return (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0); });
+    return out;
+  }
+
+  function itemsOfRepo(kind, repoId) {
+    var all = itemsOf(kind);
+    if (!repoId) return all;
+    var out = [];
+    for (var i = 0; i < all.length; i++) {
+      var rid = all[i].repoId || "ll";
+      if (rid === repoId) out.push(all[i]);
+    }
+    return out;
   }
 
   /* ---------------- 쉬운 말로 바꾸기 · 원탭 승인 ---------------- */
@@ -2494,6 +2709,10 @@
     var t = String(v || "");
     return t.length > 12 ? t.slice(0, 11) + "…" + t.slice(-4) : "저장된 키";
   }
+  function last4(v) {
+    var t = String(v || "");
+    return t.length >= 4 ? t.slice(-4) : "----";
+  }
   function actMap() {
     try {
       var raw = localStorage.getItem(ACT_KEY);
@@ -2501,9 +2720,15 @@
       return (o && typeof o === "object") ? o : {};
     } catch (e) { return {}; }
   }
-  function actOf(kind, it) { return actMap()[kind + ":" + it.number] || null; }
+  function actKey(kind, it) {
+    return kind + ":" + ((it && it.repoId) ? it.repoId : "ll") + ":" + (it && it.number);
+  }
+  function actOf(kind, it) {
+    var m = actMap();
+    return m[actKey(kind, it)] || m[kind + ":" + (it && it.number)] || null;
+  }
   function setActOf(kind, it, st) {
-    var o = actMap(), k = kind + ":" + it.number;
+    var o = actMap(), k = actKey(kind, it);
     if (st) o[k] = st; else delete o[k];
     try { localStorage.setItem(ACT_KEY, JSON.stringify(o)); } catch (e) {}
   }
@@ -2511,7 +2736,7 @@
     var b = $("btnKey");
     if (!b) return;
     b.classList.toggle("has-key", !!getPat());
-    b.setAttribute("title", getPat() ? "인증 키 저장됨 · 눌러서 바꾸기" : "인증 키 넣기 (한 번만)");
+    b.setAttribute("title", getPat() ? "키 저장됨 (끝 " + last4(getPat()) + ") · 눌러서 바꾸기" : "인증 키 넣기 (한 번만)");
   }
 
   /* 화면에 쓰는 만든 요소 */
@@ -2577,8 +2802,9 @@
     return false;
   }
 
-  /* 어느 앱 이야기인지 — 제목·본문 낱말로 고른다 */
+  /* 어느 앱 이야기인지 — 저장소 이름을 먼저 쓰고, 발주앱은 제목·본문 낱말도 본다 */
   function projBadge(it) {
+    if (it && it.repoShort) return { cls: it.repoBadge || "proj-label", name: it.repoShort };
     var text = String(it.title || "") + " " + String(it.body || "");
     if (/ai[-\s]?hub|허브|현황판/i.test(text)) return { cls: "proj-hub", name: "허브" };
     if (/gw-agent|크롬\s*확장|확장프로그램|플젝|플로우|세콤|매출|mis|매장\s*pc|hr\b/i.test(text)) return { cls: "proj-pc", name: "매장PC" };
@@ -2633,6 +2859,74 @@
     return wrap;
   }
 
+  function repoShortOf(id) {
+    for (var i = 0; i < REPO_LIST.length; i++) if (REPO_LIST[i].id === id) return REPO_LIST[i].short;
+    return "발주앱";
+  }
+
+  function repoFullOf(it) { return (it && it.repoFull) || LL; }
+
+  /* 자세히 — 그 자리에서 목록을 펼쳐 하나씩 바로 처리한다 */
+  function detailSheet(kind, opt) {
+    opt = opt || {};
+    openSheet(function (box) {
+      sheetHead(box, kind === "prs" ? "승인 기다리는 수정" : "남은 할 일");
+      var items = itemsOfRepo(kind, opt.repoId).slice(0, 10);
+      var where = opt.repoId ? repoShortOf(opt.repoId) : "발주앱·허브·PL보드·HR보드";
+      box.appendChild(mk("div", "sheet-note", where + " · " +
+        (items.length
+          ? "하나씩 눌러 바로 " + (kind === "prs" ? "합칠 수" : "진행을 요청할 수") + " 있어요."
+          : "지금은 없어요.")));
+      var list = mk("div", "task-list");
+      if (!items.length) list.appendChild(mk("div", "task-empty", "지금은 없어요."));
+      for (var i = 0; i < items.length; i++) list.appendChild(taskRow(kind, items[i]));
+      box.appendChild(list);
+      var acts = mk("div", "sheet-acts");
+      var c = mk("button", "sheet-btn primary", "닫기");
+      c.type = "button";
+      c.addEventListener("click", closeSheet);
+      acts.appendChild(c);
+      box.appendChild(acts);
+    });
+  }
+
+  /* AI 공용 게시판(docs/aside)에서 대기 중인 일 — 목록만 보여 준다 */
+  function asideSheet() {
+    openSheet(function (box) {
+      sheetHead(box, "AI 공용 게시판에 맡긴 일");
+      var list = (S.aside && S.aside.pending) || [];
+      box.appendChild(mk("div", "sheet-note", list.length
+        ? "상태가 '대기' 인 일이에요. 누가 하기로 했는지 보고 GitHub에서 열어 보세요."
+        : "지금 대기 중인 일은 없어요."));
+      for (var i = 0; i < list.length && i < 8; i++) {
+        var t = list[i];
+        var card = mk("div", "task");
+        var top = mk("div", "task-top");
+        top.appendChild(mk("span", "tbadge proj-label", "게시판"));
+        top.appendChild(mk("span", "tbadge kind-issue", "대기"));
+        var who = [t.to ? "받는 사람 " + t.to : "", t.from ? "보낸 사람 " + t.from : ""].filter(Boolean).join(" · ");
+        if (who) top.appendChild(mk("span", "task-no", who));
+        card.appendChild(top);
+        card.appendChild(mk("div", "task-title", t.title || t.name));
+        var acts = mk("div", "task-acts");
+        var a = mk("a", "act-link", "GitHub에서 보기");
+        a.href = t.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        acts.appendChild(a);
+        card.appendChild(acts);
+        box.appendChild(card);
+      }
+      box.appendChild(mk("div", "sheet-note", "게시판 일을 '진행 중' 으로 바꾸는 건 저장소에 기록이 남는 일이라, 루이에게 말로 시키면 바로 돼요."));
+      var acts = mk("div", "sheet-acts");
+      var c = mk("button", "sheet-btn primary", "닫기");
+      c.type = "button";
+      c.addEventListener("click", closeSheet);
+      acts.appendChild(c);
+      box.appendChild(acts);
+    });
+  }
+
   /* ---------------- GitHub에 실제로 쓰기 ---------------- */
 
   function ghWrite(method, path, body, pat) {
@@ -2671,11 +2965,24 @@
       return "이 키에 권한이 없어요. 키의 Pull requests·Issues 권한을 Read and write 로 켜 주세요.";
     }
     if (st === 404) return "이미 없어졌거나, 이 키에 그 저장소를 볼 권한이 없어요.";
-    if (st === 405) return "지금은 바로 합칠 수 없어요(충돌이나 저장소 규칙). GitHub에서 직접 확인해 주세요.";
-    if (st === 409) return "합치는 중에 상태가 바뀌었어요. 잠시 뒤 다시 눌러 주세요.";
-    if (st === 422) return "이미 닫혔거나 합칠 수 없는 상태예요. GitHub에서 확인해 주세요.";
+    if (st === 405) return "수정 내용이 겹쳐서 자동 합치기가 안 돼요 — GitHub에서 확인하거나 루이에게 합쳐달라고 하세요.";
+    if (st === 409) return "수정 내용이 겹치거나 그사이 바뀌어서 자동 합치기가 안 돼요 — GitHub에서 확인하거나 루이에게 합쳐달라고 하세요.";
+    if (st === 422) {
+      if (/conflict|merge/i.test(m)) return "수정 내용이 겹쳐서 자동 합치기가 안 돼요 — GitHub에서 확인하거나 루이에게 합쳐달라고 하세요.";
+      return "이미 닫혔거나 합칠 수 없는 상태예요. GitHub에서 확인해 주세요.";
+    }
     if (!st) return "인터넷이 끊겼거나 GitHub에 닿지 못했어요.";
     return "잠시 문제가 있어요 (HTTP " + st + ").";
+  }
+
+  /* 충돌로 합치기가 막힌 것인지 — 저장소 규칙·닫힘 때문인 것과 구분한다 */
+  function isConflict(e) {
+    var st = e && e.status;
+    var m = String((e && e.data && e.data.message) || "");
+    if (st === 405) return true;
+    if (st === 409) return true;
+    if (st === 422 && /conflict|merge/i.test(m)) return true;
+    return false;
   }
 
   function runAction(kind, it, btn) {
@@ -2713,13 +3020,13 @@
       btn.disabled = true;
       btn.textContent = "합치는 중…";
     }
-    ghWrite("PUT", "/repos/" + LL + "/pulls/" + it.number + "/merge", { merge_method: "merge" }, getPat())
+    ghWrite("PUT", "/repos/" + repoFullOf(it) + "/pulls/" + it.number + "/merge", { merge_method: "merge" }, getPat())
       .then(function () {
         barDone(bar, true);
         setActOf("prs", it, { state: "merged", at: Date.now() });
         render();
         showToast("✓ 승인 완료 · 바로 반영됐어요");
-        loadLabelList(true).then(function () { render(); }, function () {});
+        refreshAfterWrite(it);
       })
       .catch(function (e) {
         barDone(bar, false);
@@ -2728,9 +3035,56 @@
           btn.disabled = false;
           btn.textContent = "바로 승인";
         }
+        if (isConflict(e)) { conflictSheet(it, e); return; }
         var needKey = (e && e.status === 401);
         infoSheet("승인을 못 했어요", writeErrWord(e), needKey ? "키 다시 넣기" : null);
       });
+  }
+
+  /* 처리한 뒤에는 그 저장소만 새로 받아 숫자를 줄인다 */
+  function refreshAfterWrite(it) {
+    var id = it && it.repoId;
+    if (id && id !== "ll") {
+      refreshBoardOne(id).then(function () { render(); }, function () { render(); });
+      return;
+    }
+    loadLabelList(true).then(function () { render(); }, function () {});
+    loadIssues(true).then(function () { render(); }, function () {});
+  }
+
+  function refreshBoardOne(id) {
+    for (var i = 0; i < REPO_LIST.length; i++) {
+      if (REPO_LIST[i].id === id) return loadRepoBoard(REPO_LIST[i], true);
+    }
+    return Promise.resolve(null);
+  }
+
+  /* 합치기가 막혔을 때 — 이유를 정확히 말하고 요청 문구를 복사하게 한다 */
+  function conflictSheet(it, e) {
+    openSheet(function (box) {
+      sheetHead(box, "수정 내용이 겹쳐요");
+      box.appendChild(mk("p", "sheet-p",
+        "수정 내용이 겹쳐서 자동 합치기가 안 돼요 — GitHub에서 확인하거나 루이에게 합쳐달라고 하세요."));
+      box.appendChild(mk("div", "sheet-note",
+        repoShortOf(it.repoId) + " PR #" + it.number + " · " + cleanTitle(it) +
+        (e && e.status ? " · 응답 " + e.status : "")));
+      var acts1 = mk("div", "sheet-acts");
+      var cp = mk("button", "sheet-btn primary", "요청 문구 복사");
+      cp.type = "button";
+      cp.addEventListener("click", function () { copyConflictRequest(it); });
+      acts1.appendChild(cp);
+      box.appendChild(acts1);
+      var acts2 = mk("div", "sheet-acts");
+      var gh = mk("button", "sheet-btn", "GitHub에서 보기");
+      gh.type = "button";
+      gh.addEventListener("click", function () { if (it.url) window.open(it.url, "_blank", "noopener"); });
+      acts2.appendChild(gh);
+      var c = mk("button", "sheet-btn quiet", "닫기");
+      c.type = "button";
+      c.addEventListener("click", closeSheet);
+      acts2.appendChild(c);
+      box.appendChild(acts2);
+    });
   }
 
   function commentIssue(it, btn) {
@@ -2740,14 +3094,14 @@
       btn.disabled = true;
       btn.textContent = "보내는 중…";
     }
-    ghWrite("POST", "/repos/" + LL + "/issues/" + it.number + "/comments",
+    ghWrite("POST", "/repos/" + repoFullOf(it) + "/issues/" + it.number + "/comments",
       { body: "🚀 [HUB 진행 요청] 사용자가 AI 허브에서 작업 진행을 요청했습니다." }, getPat())
       .then(function () {
         barDone(bar, true);
         setActOf("issues", it, { state: "requested", at: Date.now() });
         render();
         showToast("✓ 진행 요청을 남겼어요");
-        loadIssues(true).then(function () { render(); }, function () {});
+        refreshAfterWrite(it);
       })
       .catch(function (e) {
         barDone(bar, false);
@@ -2837,6 +3191,10 @@
       sheetHead(box, "GitHub 인증 키");
       box.appendChild(mk("p", "sheet-p", "승인·진행 요청을 이 화면에서 바로 하려면 키가 한 번 필요해요. 3단계면 끝나요."));
 
+      /* 지금 키가 있는지 바로 보이게 */
+      box.appendChild(mk("div", saved ? "sheet-ok" : "sheet-note",
+        saved ? "✓ 키 저장됨 (끝 " + last4(saved) + ")" : "아직 키를 넣지 않았어요"));
+
       var s1 = mk("div", "sheet-step");
       s1.appendChild(mk("b", null, "1"));
       var t1 = mk("span");
@@ -2869,11 +3227,9 @@
       box.appendChild(inp);
 
       var msg = mk("div", "sheet-note", "");
-      if (saved) {
-        var ok = mk("div", "sheet-ok", "지금 키가 저장돼 있어요 (" + maskPat(saved) + ")");
-        box.appendChild(ok);
-      }
       box.appendChild(msg);
+      box.appendChild(mk("div", "sheet-note",
+        "아이폰 홈 화면 아이콘과 Safari는 저장공간이 달라서, 처음 쓰는 쪽에 키를 한 번 더 넣어야 해요."));
       box.appendChild(mk("div", "sheet-note",
         "이 키는 이 폰 브라우저(localStorage)에만 저장돼요. 화면 코드에는 들어 있지 않고, GitHub(api.github.com) 말고 다른 곳으로는 보내지 않아요."));
 
@@ -2922,11 +3278,18 @@
   function requestText(kind, it) {
     var t = cleanTitle(it);
     if (kind === "prs") {
-      return "피클아, AI 허브에서 승인하려는데 폰에 GitHub 키가 없어서 못 눌렀어. MFGKOREA/label-list PR #" +
+      return "피클아, AI 허브에서 승인하려는데 폰에 GitHub 키가 없어서 못 눌렀어. " + repoFullOf(it) + " PR #" +
         it.number + " (" + t + ") 바로 합쳐(머지)줘." + (it.url ? " " + it.url : "");
     }
-    return "피클아, AI 허브에서 이 작업 진행을 요청해. MFGKOREA/label-list 이슈 #" +
+    return "피클아, AI 허브에서 이 작업 진행을 요청해. " + repoFullOf(it) + " 이슈 #" +
       it.number + " (" + t + ") 지금 진행시켜줘." + (it.url ? " " + it.url : "");
+  }
+
+  /* 충돌로 막혔을 때 복사하는 문구 */
+  function conflictRequestText(it) {
+    return "피클아, AI 허브에서 " + repoFullOf(it) + " PR #" + it.number + " (" + cleanTitle(it) +
+      ") 승인하려는데 수정 내용이 겹쳐서 자동 합치기가 안 돼. 충돌 정리해서 합쳐줘." +
+      (it.url ? " " + it.url : "");
   }
 
   function copyText(txt) {
@@ -2955,7 +3318,15 @@
   }
 
   function copyRequest(kind, it) {
-    var txt = requestText(kind, it);
+    copyToSheet(requestText(kind, it));
+  }
+
+  function copyConflictRequest(it) {
+    copyToSheet(conflictRequestText(it));
+  }
+
+  /* 문구 복사 — 막혀도 직접 복사할 수 있게 보여 준다 */
+  function copyToSheet(txt) {
     copyText(txt).then(function (ok) {
       openSheet(function (box) {
         sheetHead(box, ok ? "요청 문구를 복사했어요" : "아래 문구를 직접 복사해 주세요");
@@ -3007,11 +3378,20 @@
     var at = kind === "issues" ? (S.ll.issuesAt || S.ll.at) : S.ll.at;
     var meta = document.createElement("div");
     meta.className = "task-meta";
+    var seen = [], needKey = false;
+    for (var ri = 0; ri < REPO_LIST.length; ri++) {
+      var rs = S.repos[REPO_LIST[ri].id];
+      if (!rs) continue;
+      if (rs.noKey) { needKey = true; continue; }
+      seen.push(REPO_LIST[ri].short);
+    }
+    var cover = seen.length ? " · " + seen.join("·") : "";
     if (!at) {
       meta.textContent = "아직 받지 못했어요";
     } else {
       var fail = S.ll.err && S.ll.stale;
-      meta.textContent = "기준 " + hhmm(at) + (fail ? " · 지금은 갱신 못 함 (" + errWord(S.ll.err) + ")" : "");
+      meta.textContent = "기준 " + hhmm(at) + cover + (needKey ? " · PL·HR은 키 필요" : "") +
+        (fail ? " · 지금은 갱신 못 함 (" + errWord(S.ll.err) + ")" : "");
       if (fail) meta.className = "task-meta stale";
     }
     box.appendChild(meta);
@@ -3087,8 +3467,12 @@
     if (ghDue) {
       S.nextGhAt = now + GH_TTL_MS;
       jobs.push(loadLabelList(!!forceGithub).catch(function () { return null; }));
+      /* 남은 할 일도 미리 받아 둔다 — 상단 카드에서 바로 '진행 시키기' 하려면 목록이 있어야 한다 */
+      jobs.push(loadIssues(!!forceGithub).catch(function () { return null; }));
       jobs.push(loadHub(!!forceGithub).catch(function () { return null; }));
+      jobs.push(refreshRepos(!!forceGithub));
       loadApps(!!forceGithub).then(function () { render(); }, function () { render(); });
+      loadAside(!!forceGithub).then(function () { render(); }, function () { render(); });
     }
 
     return Promise.all(jobs).then(function () {
