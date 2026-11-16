@@ -1352,6 +1352,7 @@
     } else if (w === "진행 중") {
       var howLong = age < 60 ? Math.round(age) + "분째" : Math.round(age / 60) + "시간째";
       r = { level: age > 30 ? "bad" : "warn", text: "진행 중 · " + howLong, why: howLong + " 하는 중이에요" };
+      r.busy = age <= 30;      // 돌고 있는 중은 '손볼 것'으로 세지 않는다
     } else if (w === "알 수 없음") {
       r = { level: "warn", text: "알 수 없음", why: "위 새로고침을 눌러 주세요" };
     } else {
@@ -1531,6 +1532,7 @@
       var age = mp.at ? (Date.now() - Number(mp.at)) / MIN : 0;
       var howLong2 = age < 60 ? Math.round(age) + "분째" : Math.round(age / 60) + "시간째";
       r = { level: age > 30 ? "bad" : "warn", text: "진행 중 · " + howLong2, why: howLong2 + " 하는 중이에요" };
+      r.busy = age <= 30;
       return staleJudge(r);
     }
 
@@ -1550,6 +1552,7 @@
       var age2 = mp.at ? (Date.now() - Number(mp.at)) / MIN : 0;
       var howLong3 = age2 < 60 ? Math.round(age2) + "분째" : Math.round(age2 / 60) + "시간째";
       r = { level: age2 > 30 ? "bad" : "warn", text: "진행 중 · " + howLong3, why: howLong3 + " 하는 중이에요" };
+      r.busy = age2 <= 30;
     } else if (w === "완료") {
       /* 발주는 휴무일처럼 넣지 않는 날이 있다 — 며칠 전 완료라는 이유만으로 경고하지 않는다 */
       if (d === null || d === 0) r = { level: "ok", text: "완료 · 오늘", why: "오늘 넘겼어요" };
@@ -1874,17 +1877,19 @@
 
     /* 2. 매출 가져오기 */
     var sj = judgeSales();
-    if (sj.level === "mute") add("warn", "매출 가져오기 기록이 없어요", "오늘은 아직 요청이 없어요", { retry: "pc" });
-    else if (sj.level === "ok") add("ok", "매출 가져오기 완료", sj.why, { retry: "pc" });
-    else if (sj.level === "warn") add("warn", "매출 가져오기를 다시 볼 때예요", sj.why, { retry: "pc" });
-    else add("bad", "매출 가져오기가 안 됐어요", sj.why, { retry: "pc" });
+    if (sj.level === "mute") add("warn", "매출 가져오기 기록이 없어요", "오늘은 아직 요청이 없어요");
+    else if (sj.busy) add("ok", "매출 가져오는 중", sj.why);
+    else if (sj.level === "ok") add("ok", "매출 가져오기 완료", sj.why);
+    else if (sj.level === "warn") add("warn", "매출 가져오기를 다시 볼 때예요", sj.why);
+    else add("bad", "매출 가져오기가 안 됐어요", sj.why);
 
     /* 3. 그룹웨어 발주 (오늘 실제 넣은 발주를 먼저 본다 · 완료 기록이면 경고하지 않는다) */
     var oj = judgeOrder();
-    if (oj.level === "ok") add("ok", oj.label || "그룹웨어 발주 정상", oj.why, { retry: "pc" });
-    else if (oj.level === "mute") add("warn", "그룹웨어 발주 기록이 없어요", "아직 넘긴 것이 없어요", { retry: "pc" });
-    else if (oj.level === "warn") add("warn", oj.label || "그룹웨어 발주를 다시 볼 때예요", oj.why, { retry: "pc" });
-    else add("bad", "그룹웨어 발주가 안 됐어요", oj.why, { retry: "pc" });
+    if (oj.level === "ok") add("ok", oj.label || "그룹웨어 발주 정상", oj.why);
+    else if (oj.busy) add("ok", "그룹웨어 발주 가져오는 중", oj.why);
+    else if (oj.level === "mute") add("warn", "그룹웨어 발주 기록이 없어요", "아직 넘긴 것이 없어요");
+    else if (oj.level === "warn") add("warn", oj.label || "그룹웨어 발주를 다시 볼 때예요", oj.why);
+    else add("bad", "그룹웨어 발주가 안 됐어요", oj.why);
 
     /* 4. 승인 기다리는 수정 */
     if (S.ll.at) {
