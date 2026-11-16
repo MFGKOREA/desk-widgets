@@ -1,7 +1,7 @@
 /* AI 현황판 서비스 워커
    - 같은 곳(우리 페이지·아이콘)만 다룬다. 매장 컴퓨터·코드 저장소 요청은 건드리지 않는다.
    - 화면(index.html)은 인터넷이 되면 새로 받고, 안 되면 마지막에 받아 둔 화면을 보여준다. */
-var CACHE = "aihub-shell-v4";
+var CACHE = "aihub-shell-v5";
 var SHELL = ["./", "./index.html", "./icon.png", "./icon-face.png", "./manifest.webmanifest"];
 
 self.addEventListener("install", function (e) {
