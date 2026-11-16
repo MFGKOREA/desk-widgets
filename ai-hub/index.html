@@ -35,8 +35,6 @@
     --stat: #f7f7f5;
     --bar-bg: #efede8;
     --bar-in: #e9e7e1;
-    --pill-bg: #f6f5f0;
-    --pill-line: #ddd9cf;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   [hidden] { display: none !important; }
@@ -457,14 +455,13 @@
   .sdot.mute { background: #b6b4ab; }
   .open-pill {
     flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px;
-    font-size: 12px; font-weight: 800; letter-spacing: -0.1px; color: var(--ink);
-    background: var(--pill-bg); border: 1px solid var(--pill-line); border-radius: 999px;
+    font-size: 12px; font-weight: 800; letter-spacing: -0.1px; color: #fff;
+    background: #18181b; border: 1px solid #18181b; border-radius: 999px;
     padding: 6px 10px 6px 11px; min-height: 30px; line-height: 1.1; white-space: nowrap;
     transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
   }
-  .open-pill i { font-style: normal; font-size: 10.5px; color: var(--mute); margin-top: -1px; transition: color 0.15s; }
-  .row.app-row:active .open-pill { background: #18181b; border-color: #18181b; color: #fff; transform: scale(0.97); }
-  .row.app-row:active .open-pill i { color: #fff; }
+  .open-pill i { font-style: normal; font-size: 10.5px; color: #fff; opacity: 0.72; margin-top: -1px; }
+  .row.app-row:active .open-pill { background: #3f3f46; border-color: #3f3f46; transform: scale(0.96); }
   .rows.sub { border-top: 1px dashed var(--line2); margin-top: 3px; padding-top: 8px; }
 
   .foot { font-size: 11.5px; color: var(--mute); line-height: 1.65; padding: 2px 2px 0; }
@@ -524,8 +521,6 @@
       --stat: #222221;
       --bar-bg: #2c2c2a;
       --bar-in: #34342f;
-      --pill-bg: #232321;
-      --pill-line: #3a3a37;
     }
     body { color: var(--ink); }
     .win { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); }
@@ -545,7 +540,8 @@
     .fs { background: #222221; }
     .fs.on { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
     .row.app-row:active .open-pill { background: #f1efe9; border-color: #f1efe9; color: #18181b; }
-    .row.app-row:active .open-pill i { color: #18181b; }
+    .open-pill { background: #f1efe9; border-color: #f1efe9; color: #18181b; }
+    .open-pill i { color: #18181b; opacity: 0.6; }
     .sdot { background: #6f6d67; }
     .sdot.ok { background: #5fd394; }
     .sdot.warn { background: #f0b352; }
