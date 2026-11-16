@@ -406,6 +406,49 @@
   .order-out.warn { border-color: #f0dfc2; background: #fdf7ea; }
   .order-out.bad { border-color: #f3d6d3; background: #fdf1ef; }
 
+  /* 매장 컴퓨터 — 실제로 시키는 버튼과 진행 단계 */
+  .pc-acts { border-top: 1px solid var(--line2); margin-top: 9px; padding-top: 9px; display: flex; gap: 6px; }
+  .pc-go {
+    flex: 1 1 0; min-width: 0; font-family: inherit; font-size: 12.5px; font-weight: 800;
+    color: #fff; background: #18181b; border: 1px solid #18181b; border-radius: 11px;
+    min-height: 40px; padding: 8px 5px; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background 0.15s, transform 0.12s, opacity 0.15s;
+  }
+  .pc-go.ghost { background: var(--win); color: var(--ink); border-color: #e2e0d8; }
+  .pc-go:active { transform: scale(0.97); }
+  .pc-go:disabled { opacity: 0.6; cursor: default; }
+  .pc-go.loading { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+  .pc-go.loading::before {
+    content: ""; display: inline-block; width: 11px; height: 11px; border: 2px solid currentColor;
+    border-top-color: transparent; border-radius: 50%; margin-right: 5px; vertical-align: -1px;
+    animation: spin 0.7s linear infinite;
+  }
+  .flow { display: flex; flex-direction: column; gap: 5px; padding-top: 8px; }
+  .flow[hidden] { display: none !important; }
+  .flow-steps { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+  .fs { font-size: 10.5px; font-weight: 700; color: var(--mute2); background: var(--stat); border: 1px solid var(--line2); border-radius: 999px; padding: 2px 7px; white-space: nowrap; }
+  .fs.on { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+  .fs.ok { color: #13713f; border-color: #bfe6d3; background: #effaf4; }
+  .fs.bad { color: #b3322a; border-color: #f3d6d3; background: #fdf1ef; }
+  .fs-sep { font-size: 10px; color: var(--mute2); }
+  .flow-msg { font-size: 11.5px; color: var(--ink2); line-height: 1.45; }
+  .flow-msg.bad { color: #b3322a; }
+  .flow-lbar { height: 3px; margin: 2px 0 0; }
+  .order-block { display: flex; flex-direction: column; gap: 5px; padding-top: 3px; }
+  .order-when:empty { display: none; }
+
+  /* 어플 관리 — 앱마다 상태 한 줄 */
+  .app-list { gap: 3px; }
+  .row.app-row {
+    text-decoration: none; color: inherit; border-radius: 10px; align-items: center;
+    padding: 3px 0; -webkit-tap-highlight-color: transparent;
+  }
+  .row.app-row:active { background: rgba(24, 24, 27, 0.045); }
+  .row.app-row .row-v { display: flex; align-items: baseline; gap: 1px; }
+  .row.app-row .chev { font-size: 11px; }
+  .rows.sub { border-top: 1px dashed var(--line2); margin-top: 3px; padding-top: 8px; }
+
   .foot { font-size: 11.5px; color: var(--mute); line-height: 1.65; padding: 2px 2px 0; }
 
   .cursor {
@@ -476,6 +519,14 @@
     .mini-btn:hover { background: #303035; color: #fff; border-color: #45454b; }
     .mini-btn.loading { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
     .mini-btn.done, .chip-btn.done { background: #10281c; border-color: #1f5236; color: #6ee7a8; }
+    .pc-go { background: #f1efe9; border-color: #f1efe9; color: #18181b; }
+    .pc-go.ghost { background: #26262a; border-color: #3a3a3f; color: #d6d4cd; }
+    .pc-go.loading { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
+    .fs { background: #222221; }
+    .fs.on { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
+    .fs.ok { background: #10281c; border-color: #1f5236; color: #6ee7a8; }
+    .fs.bad { background: #2a1715; border-color: #4c2521; color: #f5837a; }
+    .row.app-row:active { background: rgba(255, 255, 255, 0.06); }
     .stat.ok { background: #10251a; border-color: #1d4732; }
     .stat.ok .stat-n, .stat.ok .stat-u, .stat.ok .stat-k { color: #62d99a; }
     .stat.warn { background: #2a2113; border-color: #4a3718; }
@@ -572,7 +623,24 @@
 
     <div class="grid">
 
-      <!-- 1. 매장 컴퓨터 -->
+      <!-- 1. 지금 살펴볼 것 (손볼 항목) -->
+      <div class="card" id="cardProblems" data-card="problems">
+        <div class="card-top">
+          <div class="card-head">
+            <div class="card-title">지금 살펴볼 것</div>
+            <div class="card-sub">손보면 좋은 것부터</div>
+          </div>
+          <div class="card-right">
+            <div class="card-num c-mute" data-field="prob-count">확인 중</div>
+          </div>
+        </div>
+        <div class="lbar card-lbar" id="barProblems" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="rows" id="probRows">
+          <div class="empty">아직 확인하기 전이에요.</div>
+        </div>
+      </div>
+
+      <!-- 2. 매장 컴퓨터 -->
       <div class="card" id="cardPc" data-card="pc">
         <div class="card-top">
           <div class="card-head">
@@ -581,41 +649,84 @@
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="pc-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="pc" title="매장 컴퓨터에 다시 물어봐요">다시 확인</button>
           </div>
         </div>
         <div class="lbar card-lbar" id="barPc" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">마지막 확인</div><div class="row-v"><strong class="c-mute" data-field="pc-seen">–</strong></div></div>
           <div class="row" id="rowPcMode"><div class="row-k">대기 상태</div><div class="row-v"><strong data-field="pc-mode">–</strong></div></div>
-          <div class="row"><div class="row-k">매출 가져오기</div><div class="row-v"><strong data-field="pc-sales">–</strong></div></div>
-          <div class="row"><div class="row-k">그룹웨어 발주</div><div class="row-v"><strong data-field="pc-order">–</strong></div></div>
-        </div>
-        <div class="order-now">
-          <div class="order-top">
-            <button class="mini-btn order-btn" type="button" id="btnOrderNow" aria-label="오늘 그룹웨어 발주 현황 확인">발주현황 확인</button>
-            <span class="order-when" id="orderWhen"></span>
+          <div class="row">
+            <div class="row-line">
+              <div class="row-k">매출 가져오기</div>
+              <div class="row-sub">발주앱 그로스 · PL보드 토탈</div>
+            </div>
+            <div class="row-v"><strong data-field="pc-sales">–</strong></div>
           </div>
-          <div class="lbar order-lbar" id="barOrder" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
+          <div class="row">
+            <div class="row-line">
+              <div class="row-k">발주현황</div>
+              <div class="row-sub">발주앱 입고 연동</div>
+            </div>
+            <div class="row-v"><strong data-field="pc-order">–</strong></div>
+          </div>
+        </div>
+        <div class="pc-acts">
+          <button class="pc-go" type="button" id="btnSalesLoad">매출 불러오기</button>
+          <button class="pc-go ghost" type="button" id="btnOrderNow" aria-expanded="false" aria-controls="orderOut">발주현황 불러오기</button>
+        </div>
+        <div class="flow" id="salesFlow" hidden>
+          <div class="flow-steps">
+            <span class="fs" data-s="1">요청 보냄</span><span class="fs-sep">→</span><span class="fs" data-s="2">매장 PC 처리 중</span><span class="fs-sep">→</span><span class="fs" data-s="3">완료</span>
+          </div>
+          <div class="flow-msg" id="salesFlowMsg"></div>
+          <div class="lbar flow-lbar" id="barSales" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
+        </div>
+        <div class="order-block">
+          <div class="order-when" id="orderWhen"></div>
           <div class="order-out" id="orderOut" hidden></div>
         </div>
         <div class="card-foot" data-field="pc-basis">기준 –</div>
       </div>
 
-      <!-- 2. 발주·라벨앱 -->
+      <!-- 3. 어플 관리 -->
       <div class="card" id="cardLl" data-card="ll">
         <div class="card-top">
           <div class="card-head">
-            <div class="card-title">발주·라벨앱 관리</div>
-            <div class="card-sub">발주앱과 한글표시사항 앱</div>
+            <div class="card-title">어플 관리</div>
+            <div class="card-sub">매장에서 쓰는 앱 6개 · 눌러서 열어요</div>
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="ll-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="ll" title="코드 저장소를 새로 확인해요">새로 확인</button>
           </div>
         </div>
         <div class="lbar card-lbar" id="barLl" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
-        <div class="rows">
+        <div class="rows app-list">
+          <a class="row app-row" href="https://mfgkorea.github.io/label-list/order.html" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">발주·프랩 어플</div><div class="row-sub" data-field="app-order-sub">불러오는 중</div></div>
+            <div class="row-v"><strong data-field="app-order">–</strong><span class="chev">↗</span></div>
+          </a>
+          <a class="row app-row" href="https://mfgkorea.github.io/label-list/" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">한글표시사항 어플</div><div class="row-sub" data-field="app-label-sub">불러오는 중</div></div>
+            <div class="row-v"><strong data-field="app-label">–</strong><span class="chev">↗</span></div>
+          </a>
+          <a class="row app-row" href="https://github.com/MFGKOREA/pl-dashboard" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">PL 보드</div><div class="row-sub" data-field="app-pl-sub">불러오는 중</div></div>
+            <div class="row-v"><strong data-field="app-pl">–</strong><span class="chev">↗</span></div>
+          </a>
+          <a class="row app-row" href="https://github.com/MFGKOREA/hr-board" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">HR 보드</div><div class="row-sub" data-field="app-hr-sub">불러오는 중</div></div>
+            <div class="row-v"><strong data-field="app-hr">–</strong><span class="chev">↗</span></div>
+          </a>
+          <a class="row app-row" href="https://mfgkorea.github.io/desk-widgets/" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">데스크 위젯</div><div class="row-sub" data-field="app-widget-sub">불러오는 중</div></div>
+            <div class="row-v"><strong data-field="app-widget">–</strong><span class="chev">↗</span></div>
+          </a>
+          <a class="row app-row" href="https://github.com/MFGKOREA/label-list/tree/main/gw-agent" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">GW 에이전트</div><div class="row-sub" data-field="app-gw-sub">불러오는 중</div></div>
+            <div class="row-v"><strong data-field="app-gw">–</strong><span class="chev">↗</span></div>
+          </a>
+        </div>
+        <div class="rows sub">
           <div class="row tap" id="rowPrs" data-toggle="listPrs" role="button" tabindex="0" aria-expanded="false" aria-controls="listPrs">
             <div class="row-k">승인 기다리는 수정</div>
             <div class="row-v"><strong data-field="ll-prs">–</strong><span class="chev">▼</span></div>
@@ -631,16 +742,36 @@
         <div class="card-foot"><span data-field="ll-basis">기준 –</span> · 최근 저장 번호 <span data-field="ll-sha">–</span></div>
       </div>
 
-      <!-- 3. 이 현황판 상태 -->
+      <!-- 4. 연결된 AI -->
+      <div class="card" id="cardNodes" data-card="nodes">
+        <div class="card-top">
+          <div class="card-head">
+            <div class="card-title">연결된 AI</div>
+            <div class="card-sub">각자 맡은 일</div>
+          </div>
+          <div class="card-right">
+            <div class="card-num c-mute" data-field="nodes-status">확인 중</div>
+          </div>
+        </div>
+        <div class="lbar card-lbar" id="barNodes" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="rows">
+          <div class="row"><div class="row-k">루이 (모바일 비서)</div><div class="row-v"><strong class="c-mute" data-field="node-pickle">–</strong></div></div>
+          <div class="row"><div class="row-k">클로드 (코드 작업)</div><div class="row-v"><strong data-field="node-claude">–</strong></div></div>
+          <div class="row"><div class="row-k">어사이드 (집 PC)</div><div class="row-v"><strong data-field="node-aside">–</strong></div></div>
+          <div class="row"><div class="row-k">그록봇 (자료 조사)</div><div class="row-v"><strong data-field="node-grok">–</strong></div></div>
+        </div>
+        <div class="card-note">커밋과 PR 시각으로 본 값이에요. 저장소 계정이 하나라, 누가 한 일인지는 제목의 표시([그록 봇] 등)로만 나눠요. 루이는 이 화면에서 알 수 있는 기록이 없어요.</div>
+      </div>
+
+      <!-- 5. 이 현황판 상태 (맨 아래) -->
       <div class="card" id="cardHub" data-card="hub">
         <div class="card-top">
           <div class="card-head">
             <div class="card-title">이 현황판 상태</div>
-            <div class="card-sub">이 화면이 잘 돌아가는지 봐요</div>
+            <div class="card-sub">이 화면과 연결이 잘 도는지 봐요</div>
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="hub-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="hub" title="이 현황판 코드를 다시 확인해요">새로고침</button>
           </div>
         </div>
         <div class="lbar card-lbar" id="barHub" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
@@ -654,63 +785,6 @@
             </div>
             <div class="row-v"><strong data-field="hub-auto">30초마다</strong></div>
           </div>
-        </div>
-      </div>
-
-      <!-- 4. 함께 일하는 AI 4인 -->
-      <div class="card" id="cardNodes" data-card="nodes">
-        <div class="card-top">
-          <div class="card-head">
-            <div class="card-title">함께 일하는 AI 4인</div>
-            <div class="card-sub">코드 기록 기준 · 누가 남긴 기록인지</div>
-          </div>
-          <div class="card-right">
-            <div class="card-num c-mute" data-field="nodes-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="nodes" title="코드 기록을 다시 확인해요">다시 확인</button>
-          </div>
-        </div>
-        <div class="lbar card-lbar" id="barNodes" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
-        <div class="rows">
-          <div class="row"><div class="row-k">피클 (모바일 비서)</div><div class="row-v"><strong class="c-mute" data-field="node-pickle">–</strong></div></div>
-          <div class="row"><div class="row-k">클로드 (코드 작업)</div><div class="row-v"><strong data-field="node-claude">–</strong></div></div>
-          <div class="row"><div class="row-k">어사이드 (집 PC)</div><div class="row-v"><strong data-field="node-aside">–</strong></div></div>
-          <div class="row"><div class="row-k">그록봇 (자료 조사)</div><div class="row-v"><strong data-field="node-grok">–</strong></div></div>
-        </div>
-        <div class="card-note">커밋과 PR 시각으로 본 값이에요. 저장소 계정이 하나라, 누가 한 일인지는 제목의 표시([그록 봇] 등)로만 나눠요. 피클은 이 화면에서 알 수 있는 기록이 없어요.</div>
-      </div>
-
-      <!-- 5. 지금 살펴볼 것 -->
-      <div class="card" id="cardProblems" data-card="problems">
-        <div class="card-top">
-          <div class="card-head">
-            <div class="card-title">지금 살펴볼 것</div>
-            <div class="card-sub">손보면 좋은 것부터</div>
-          </div>
-          <div class="card-right">
-            <div class="card-num c-mute" data-field="prob-count">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="problems" title="전체를 다시 확인해요">다시 확인</button>
-          </div>
-        </div>
-        <div class="lbar card-lbar" id="barProblems" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
-        <div class="rows" id="probRows">
-          <div class="empty">아직 확인하기 전이에요.</div>
-        </div>
-      </div>
-
-      <!-- 6. 연결 상태 -->
-      <div class="card" id="cardSignals" data-card="signals">
-        <div class="card-top">
-          <div class="card-head">
-            <div class="card-title">연결 상태</div>
-            <div class="card-sub">매장 컴퓨터와 코드 저장소</div>
-          </div>
-          <div class="card-right">
-            <div class="card-num c-mute" data-field="conn-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="signals" title="연결을 다시 확인해요">확인</button>
-          </div>
-        </div>
-        <div class="lbar card-lbar" id="barSignals" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
-        <div class="rows">
           <div class="row"><div class="row-k">매장 컴퓨터 연결</div><div class="row-v"><strong data-field="conn-pc">–</strong></div></div>
           <div class="row"><div class="row-k">코드 저장소 연결</div><div class="row-v"><strong data-field="conn-code">–</strong></div></div>
           <div class="row"><div class="row-k">다음 자동 확인 (코드 저장소)</div><div class="row-v"><strong data-field="conn-next">–</strong></div></div>
@@ -720,7 +794,6 @@
       </div>
 
     </div>
-
     <div class="foot">
       매장 컴퓨터는 30초마다, 코드 저장소는 10분에 한 번 자동으로 확인합니다.<br>
       개인정보나 매출 금액은 표시되지 않습니다.
@@ -738,6 +811,8 @@
   var GH = "https://api.github.com";
   var LL = "MFGKOREA/label-list";
   var HUB = "MFGKOREA/desk-widgets";
+  var PL = "MFGKOREA/pl-dashboard";     // 비공개 — 인증 키가 있어야 상태를 봄
+  var HRB = "MFGKOREA/hr-board";        // 비공개 — 인증 키가 있어야 상태를 봄
 
   var AUTO_SEC = 30;             // 매장 컴퓨터는 30초마다
   var GH_TTL_MS = 600000;        // 코드 저장소는 10분에 한 번 (시간당 60회 한도 보호)
@@ -752,6 +827,14 @@
   var ORDER_TTL_MS = 600000;          // 전체 자료가 1.3MB라 10분에 한 번만 새로 받는다
   var ORDER_TIMEOUT_MS = 15000;       // 주문현황 전체 읽기는 좀 더 기다린다
 
+  /* 매장 PC에 실제로 시키는 일 (salesPush) */
+  var PC_OFF_MIN = 20;                // 매장 PC가 20분 넘게 조용하면 꺼진 것으로 본다
+  var POLL_FAST_MS = 3000;            // 처음 90초는 3초마다 확인
+  var POLL_FAST_UNTIL = 90000;
+  var POLL_SLOW_MS = 15000;           // 그 뒤로는 15초마다
+  var POLL_GIVE_UP_MS = 360000;       // 6분이 지나도 안 끝나면 화면만 놓아준다 (PC가 켜지면 처리됨)
+  var SEND_TIMEOUT_MS = 15000;
+
   var S = {
     sheet: { ok: false, at: null, data: null, err: null, stat: null, stale: false, timeout: false, lastOkAt: null },
     ll:    { ok: false, at: null, err: null, errAt: null, stale: false, items: {} },
@@ -765,7 +848,9 @@
     fails: { sheet: 0, ll: 0, hub: 0 },
     checks: null,
     issAt: 0,
-    order: { ok: false, at: null, key: null, n: null, rows: null, by: [], items: [], scanAt: null, dataAt: null, err: null, stale: false, loading: false, open: false }
+    order: { ok: false, at: null, key: null, n: null, rows: null, by: [], items: [], scanAt: null, dataAt: null, err: null, stale: false, loading: false, open: false },
+    kv: { at: null, hrAt: null, agentVer: null, salesText: null, salesAt: null },
+    apps: { at: null, pl: null, hr: null, noKey: false, err: null }
   };
 
   var inFlight = {};
@@ -882,11 +967,6 @@
   }
 
   function setText(id, text) { var el = $(id); if (el) el.textContent = text; }
-
-  function setBtnTip(kind, tip) {
-    var b = document.querySelector('[data-refresh="' + kind + '"]');
-    if (b) b.setAttribute("title", tip);
-  }
 
   function showToast(msg) {
     var t = $("toast");
@@ -1205,6 +1285,42 @@
     });
   }
 
+  /* ---------------- 어플 관리: 앱 6개의 상태 ----------------
+     비공개 저장소(PL 보드·HR 보드)는 GitHub 인증 키가 있을 때만 본다.
+     키가 없으면 '정상'이라고 꾸미지 않고 '키 필요'라고 그대로 적는다. */
+
+  function loadApps(force) {
+    if (!force && S.apps.at && Date.now() - S.apps.at < GH_TTL_MS) return Promise.resolve(S.apps);
+    var pat = getPat();
+    if (!pat) { S.apps = { at: Date.now(), pl: null, hr: null, noKey: true, err: null }; return Promise.resolve(S.apps); }
+    function one(path) {
+      return timedFetch(GH + path, {
+        headers: {
+          "Accept": "application/vnd.github+json",
+          "Authorization": "Bearer " + pat,
+          "X-GitHub-Api-Version": "2022-11-28"
+        },
+        cache: "no-store"
+      }, GH_TIMEOUT_MS).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      });
+    }
+    return Promise.all([
+      one("/repos/" + PL).catch(function () { return null; }),
+      one("/repos/" + HRB).catch(function () { return null; })
+    ]).then(function (res) {
+      S.apps = {
+        at: Date.now(),
+        pl: (res[0] && res[0].pushed_at) || null,
+        hr: (res[1] && res[1].pushed_at) || null,
+        noKey: false,
+        err: null
+      };
+      return S.apps;
+    });
+  }
+
   /* ---------------- 카드별 판정 (점검과 화면이 같은 함수를 쓴다) ---------------- */
 
   function judgePc() {
@@ -1237,9 +1353,9 @@
       var howLong = age < 60 ? Math.round(age) + "분째" : Math.round(age / 60) + "시간째";
       r = { level: age > 30 ? "bad" : "warn", text: "진행 중 · " + howLong, why: howLong + " 하는 중이에요" };
     } else if (w === "알 수 없음") {
-      r = { level: "warn", text: "알 수 없음", why: "위 '다시 확인'을 눌러 주세요" };
+      r = { level: "warn", text: "알 수 없음", why: "위 새로고침을 눌러 주세요" };
     } else {
-      r = { level: "bad", text: "실패", why: "위 '다시 확인'을 눌러 다시 해 보세요" };
+      r = { level: "bad", text: "실패", why: "위 새로고침을 눌러 다시 해 보세요" };
     }
     return staleJudge(r);
   }
@@ -1350,6 +1466,15 @@
           var m = j.data["misOrder." + key] || null;
           var scan = j.data.misOrderScan || null;
           var p = pickOrder(m);
+          /* 매출·HR·확장 버전은 시트 전체를 받을 때 같이 집어 둔다 (따로 부르지 않게) */
+          var sm = j.data.misAgent || {}, hrS = j.data.hrStatus || {}, spS = j.data.salesPush || {};
+          S.kv = {
+            at: Date.now(),
+            hrAt: Number(hrS.at || 0) || null,
+            agentVer: sm.ver ? String(sm.ver) : null,
+            salesText: spS.text ? String(spS.text) : null,
+            salesAt: Number(spS.doneAt || spS.at || 0) || null
+          };
           S.order = {
             ok: true, at: Date.now(), key: key, n: p.n, rows: p.rows, by: p.by,
             items: orderTop(p, 5),
@@ -1381,7 +1506,7 @@
 
     /* 1) 지금 앱에서 넘기다 실패한 것만 '확인 필요' */
     if (w === "실패" && (d === null || d === 0)) {
-      return staleJudge({ level: "bad", text: "실패", why: "그룹웨어로 넘기다 실패했어요 · 위 '다시 확인'을 눌러 다시 넘겨 보세요" });
+      return staleJudge({ level: "bad", text: "실패", why: "그룹웨어로 넘기다 실패했어요 · 위 새로고침을 눌러 다시 넘겨 보세요" });
     }
 
     /* 2) 오늘 그룹웨어에 실제로 넣은 발주가 있으면 그게 가장 정확하다 */
@@ -1429,11 +1554,253 @@
     } else if (!mp.status) {
       return { level: "mute", text: "정보 없음", why: "넘긴 기록이 없어요" };
     } else if (w === "알 수 없음") {
-      r = { level: "warn", text: "알 수 없음", why: "위 '다시 확인'을 눌러 주세요" };
+      r = { level: "warn", text: "알 수 없음", why: "위 새로고침을 눌러 주세요" };
     } else {
-      r = { level: "bad", text: "실패", why: "위 '다시 확인'을 눌러 다시 넘겨 보세요" };
+      r = { level: "bad", text: "실패", why: "위 새로고침을 눌러 다시 넘겨 보세요" };
     }
     return staleJudge(r);
+  }
+
+  /* ---------------- 매장 PC에 실제로 시키기 (salesPush) ----------------
+     [매출 불러오기]    → kind "now"    (오늘 지금까지 Gross)
+     [발주현황 불러오기] → kind "orders" (오늘 주문현황을 MIS에서 다시 읽어 misOrder.오늘에 저장)
+     매장 PC(gw-agent)가 시트의 salesPush.status === "pending"을 보고 그룹웨어·MIS 창을 열어 일을 한 뒤
+     status를 running → done/error 로 바꿔 놓는다. 이 화면은 그 상태를 따라가며 단계를 보여 준다. */
+
+  var KIND_WORD = { now: "매출", orders: "발주현황" };
+  var pcJob = null;      // 지금 따라가는 요청 {kind, id, t0, timer, btn, bar}
+
+  function readStatusNow() {
+    return timedFetch(SHEET + "&t=" + Date.now(), { cache: "no-store" }, SHEET_TIMEOUT_MS)
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j || !j.ok || !j.status) throw new Error("형식");
+        return j;
+      });
+  }
+
+  /* 매장 PC가 이 요청을 아직 들고 있는가 (발주앱과 같은 기준) */
+  function spAlive(sp) {
+    var s = String((sp && sp.status) || "");
+    if (s !== "pending" && s !== "running") return false;
+    var at = Number(sp.at || 0);
+    if (s === "running") return Date.now() - Number(sp.startAt || at) < 14 * MIN;
+    return Date.now() - at < 6 * MIN;
+  }
+
+  function pcOffMin(st) {
+    var ag = (st || {}).misAgent || {};
+    if (!ag.at) return Infinity;
+    return (Date.now() - Number(ag.at)) / MIN;
+  }
+
+  /* 발주현황 스캔은 MIS 쪽 사정으로 오래 걸릴 수 있어 더 기다린다 */
+  function giveUpMs(kind) { return kind === "orders" ? 480000 : POLL_GIVE_UP_MS; }
+
+  function flowStep(n, bad) {
+    var p = $("salesFlow");
+    if (!p) return;
+    var steps = p.querySelectorAll(".fs");
+    for (var i = 0; i < steps.length; i++) {
+      var k = i + 1;
+      steps[i].className = "fs" + (bad && k === bad ? " bad" : (k < n ? " ok" : (k === n ? " on" : "")));
+    }
+  }
+
+  function flowMsg(text, bad) {
+    var el = $("salesFlowMsg");
+    if (!el) return;
+    el.textContent = text || "";
+    el.className = "flow-msg" + (bad ? " bad" : "");
+  }
+
+  function flowStart(kind, btn) {
+    pcJob = { kind: kind, id: null, t0: Date.now(), timer: null, btn: btn, bar: barRun($("barSales")) };
+    var p = $("salesFlow");
+    if (p) p.hidden = false;
+    flowStep(1);
+    flowMsg(KIND_WORD[kind] + "을 매장 컴퓨터에 시키는 중이에요");
+    if (btn) { btn.disabled = true; btn.classList.add("loading"); }
+  }
+
+  function flowStop(ok, text, badStep) {
+    var j = pcJob;
+    pcJob = null;
+    if (j && j.timer) clearTimeout(j.timer);
+    if (j && j.bar) barDone(j.bar, ok);
+    if (j && j.btn) { j.btn.disabled = false; j.btn.classList.remove("loading"); }
+    flowStep(ok ? 9 : 2, ok ? 0 : (badStep || 2));
+    flowMsg(text, !ok);
+    render();
+    var p = $("salesFlow");
+    setTimeout(function () { if (!pcJob && p) p.hidden = true; }, ok ? 6000 : 11000);
+  }
+
+  /* 그만두었을 때: 막대·단계 없이 조용히 접는다 */
+  function flowCancel(text) {
+    var j = pcJob;
+    pcJob = null;
+    if (j && j.timer) clearTimeout(j.timer);
+    if (j && j.btn) { j.btn.disabled = false; j.btn.classList.remove("loading"); }
+    if (j && j.bar) barDone(j.bar, true);
+    var p = $("salesFlow");
+    if (p) p.hidden = true;
+    render();
+    if (text) showToast(text);
+  }
+
+  /* 매장 PC가 꺼져 있을 때: 걸어둘지 물어본다 */
+  function askQueue(kind, offMin) {
+    return new Promise(function (resolve) {
+      var done = false;
+      function fin(v) { if (done) return; done = true; sheetOnClose = null; resolve(v); }
+      sheetOnClose = function () { fin(false); };
+      openSheet(function (box) {
+        sheetHead(box, "매장 PC가 꺼져 있어요");
+        box.appendChild(mk("p", "sheet-p",
+          "마지막 확인이 " + (isFinite(offMin) ? ago(offMin) : "없어요") + "예요. 지금은 바로 못 가져와요."));
+        box.appendChild(mk("div", "sheet-note",
+          "걸어두면 매장 PC가 켜질 때 " + KIND_WORD[kind] + "을 알아서 가져와요. (요청은 6시간까지 기다려요)"));
+        var acts = mk("div", "sheet-acts");
+        var y = mk("button", "sheet-btn primary", "걸어두기");
+        y.type = "button";
+        y.addEventListener("click", function () { fin(true); closeSheet(); });
+        acts.appendChild(y);
+        var n = mk("button", "sheet-btn quiet", "그만두기");
+        n.type = "button";
+        n.addEventListener("click", function () { fin(false); closeSheet(); });
+        acts.appendChild(n);
+        box.appendChild(acts);
+      });
+    });
+  }
+
+  function pcSend(kind) {
+    var d = todayKey();
+    var value = { id: Date.now(), at: Date.now(), kind: kind, status: "pending", from: d, to: d };
+    pcJob.id = value.id;
+    pcJob.t0 = value.at;
+    flowStep(2);
+    flowMsg("보냈어요 · 매장 PC가 그룹웨어·MIS를 열어 " + KIND_WORD[kind] + "을 읽어요");
+    if (S.sheet.stat) S.sheet.stat.salesPush = { id: value.id, at: value.at, status: "pending" };
+    render();
+    return timedFetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "set", key: "salesPush", value: value }),
+      cache: "no-store"
+    }, SEND_TIMEOUT_MS).then(function (r) {
+      return r.json();
+    }).then(function (res) {
+      if (!pcJob) return;
+      if (!res || !res.ok) {
+        if (res && res.auth) { flowStop(false, "시트가 잠겨 있어 시킬 수 없어요 · ⚙️에서 가게 키를 넣어 주세요"); return; }
+        throw new Error((res && res.error) || "보내지 못했어요");
+      }
+      pollPc(kind, value.id, value.at);
+    }).catch(function () {
+      if (!pcJob) return;
+      flowStop(false, "요청을 보내지 못했어요 · 인터넷을 확인하고 다시 눌러 주세요");
+    });
+  }
+
+  function pollPc(kind, id, t0) {
+    if (!pcJob || String(pcJob.id) !== String(id)) return;
+    var mine = pcJob;
+    mine.timer = setTimeout(function () {
+      if (pcJob !== mine) return;
+      readStatusNow().then(function (j) {
+        if (pcJob !== mine) return;
+        var st = j.status || {}, sp = st.salesPush || {};
+        if (st.misAgent) S.sheet.stat = { misPush: st.misPush, salesPush: sp, misAgent: st.misAgent };
+        if (String(sp.id) !== String(id)) {
+          flowStop(false, "다른 요청으로 바뀌었어요 · 화면을 다시 열어 확인해 주세요");
+          return;
+        }
+        if (sp.status === "done") { pcFinish(kind, true); return; }
+        if (sp.status === "error") { pcFinish(kind, false); return; }
+        var age = Date.now() - t0;
+        if (sp.status === "running") { flowStep(2); flowMsg("매장 PC가 MIS·그룹웨어에서 " + KIND_WORD[kind] + "을 읽고 있어요"); }
+        else { flowStep(1); flowMsg(age > 150000 ? "보냈어요 · 매장 PC가 아직 못 받았어요 (크롬이 켜져 있는지 확인해 주세요)" : "보냈어요 · 매장 PC가 곧 시작해요"); }
+        render();
+        if (age > giveUpMs(kind)) { flowStop(true, "아직 처리 중이에요 · 끝나면 자동으로 화면에 반영돼요"); return; }
+        pollPc(kind, id, t0);
+      }, function () {
+        if (pcJob !== mine) return;
+        if (Date.now() - t0 > giveUpMs(kind)) { flowStop(true, "아직 처리 중이에요 · 끝나면 자동으로 화면에 반영돼요"); return; }
+        pollPc(kind, id, t0);
+      });
+    }, Date.now() - t0 < POLL_FAST_UNTIL ? POLL_FAST_MS : POLL_SLOW_MS);
+  }
+
+  /* 끝났으면: 최신 상태와 오늘 발주 자료를 다시 읽어 화면에 반영한다 */
+  function pcFinish(kind, ok) {
+    Promise.all([
+      loadSheet().catch(function () { return null; }),
+      loadOrderToday(true).catch(function () { return null; })
+    ]).then(function () {
+      var txt = (S.kv && S.kv.salesText) ? String(S.kv.salesText).split("\n")[0] : "";
+      if (ok) {
+        if (kind === "orders") S.order.open = true;
+        /* 매출 금액은 화면에 쓰지 않는다(아래 안내문과 같은 약속) — 완료·시각만 보여 준다 */
+        flowStop(true, kind === "orders"
+          ? ("완료! 오늘 발주 " + (S.order && S.order.n != null ? S.order.n : 0) + "건을 가져왔어요")
+          : "완료! 오늘 매출을 가져왔어요 · 매장 매출 기록이 갱신됐어요");
+      } else {
+        flowStop(false, "매장 PC가 끝내지 못했어요" + (txt ? " · " + txt.slice(0, 90) : ""));
+      }
+    });
+  }
+
+  function pcRun(kind, btn) {
+    if (pcJob) return;
+    flowStart(kind, btn);
+    readStatusNow().then(function (j) {
+      if (!pcJob) return;
+      var st = j.status || {}, sp = st.salesPush || {};
+      /* 이미 돌고 있으면 새로 시키지 않고 그 일을 따라간다 */
+      if (spAlive(sp)) {
+        pcJob.id = Number(sp.id || 0);
+        pcJob.t0 = Number(sp.at || Date.now());
+        flowStep(sp.status === "running" ? 2 : 1);
+        flowMsg("매장 PC가 이미 가져오는 중이에요 · 그대로 지켜볼게요");
+        pollPc(kind, pcJob.id, pcJob.t0);
+        return;
+      }
+      var off = pcOffMin(st);
+      if (off > PC_OFF_MIN) {
+        askQueue(kind, off).then(function (yes) {
+          if (!pcJob) return;
+          if (!yes) { flowCancel("매장 PC가 꺼져 있어 그만두었어요"); return; }
+          pcSend(kind);
+        });
+        return;
+      }
+      pcSend(kind);
+    }).catch(function () {
+      if (!pcJob) return;
+      flowStop(false, "지금은 매장 컴퓨터 상태를 못 봤어요 · 잠시 뒤 다시 눌러 주세요");
+    });
+  }
+
+  /* 발주현황: 상세 줄을 펼치고/접는다. 자료가 오래됐으면 매장 PC에 다시 읽게 한다 */
+  function orderPanelGo(btn) {
+    if (pcJob) return;
+    if (S.order.open) { S.order.open = false; render(); return; }
+    var live = !!S.order.ok && S.order.key === todayKey();
+    /* 신선함은 '내가 언제 받았나'가 아니라 '매장 PC가 언제 읽었나'(dataAt)로 본다 */
+    var readAt = Number(S.order.dataAt || S.order.at || 0);
+    var fresh = live && !S.order.stale && Date.now() - readAt < ORDER_TTL_MS;
+    S.order.open = true;
+    render();
+    if (fresh) {
+      showToast("오늘 발주 " + (S.order.n || 0) + "건 · " + hhmm(S.order.dataAt || S.order.at) + " 기준");
+      return;
+    }
+    pcRun("orders", btn);
   }
 
   /* ---------------- 점검 8가지 (매장 6 + 이 화면 2) ---------------- */
@@ -1598,13 +1965,16 @@
     var btn = $("btnOrderNow"), out = $("orderOut");
     if (!out) return;
 
-    if (btn && !btn.classList.contains("loading") && !btn.classList.contains("done")) {
-      if (!btn.getAttribute("data-base")) btn.setAttribute("data-base", "발주현황 확인");
-      if (btn.textContent !== btn.getAttribute("data-base")) btn.textContent = btn.getAttribute("data-base");
+    if (btn && !btn.classList.contains("loading")) {
+      if (!btn.getAttribute("data-base")) btn.setAttribute("data-base", "발주현황 불러오기");
+      var want = o.open ? "발주현황 접기" : btn.getAttribute("data-base");
+      if (btn.textContent !== want) btn.textContent = want;
+      btn.setAttribute("aria-expanded", o.open ? "true" : "false");
     }
 
     if (!live) {
-      setText("orderWhen", o.err ? "발주현황을 못 봤어요" : "");
+      var busy = pcJob && pcJob.kind === "orders";
+      setText("orderWhen", busy ? "매장 PC가 가져오는 중" : (o.err ? "발주현황을 못 봤어요" : ""));
     } else if (o.n > 0) {
       setText("orderWhen", (o.stale ? "지난 값 · " : "") + "오늘 " + o.n + "건 · " + hhmm(o.dataAt || o.at) + " 기준");
     } else {
@@ -1617,8 +1987,9 @@
     out.textContent = "";
 
     if (!live) {
-      out.appendChild(mk("div", "order-out-h", o.loading ? "발주현황을 확인하고 있어요" : "발주현황을 못 봤어요"));
-      out.appendChild(mk("div", "order-more", "잠시 뒤 다시 눌러 주세요"));
+      var wait = pcJob && pcJob.kind === "orders";
+      out.appendChild(mk("div", "order-out-h", wait ? "매장 PC가 발주현황을 가져오고 있어요" : "발주현황을 못 봤어요"));
+      out.appendChild(mk("div", "order-more", wait ? "끝나면 여기에 바로 보여드려요" : "버튼을 다시 눌러 확인해 주세요"));
       return;
     }
     if (o.n > 0) {
@@ -1636,6 +2007,93 @@
     } else {
       out.appendChild(mk("div", "order-out-h", "오늘 발주 기록 없음"));
       out.appendChild(mk("div", "order-out-s", "그룹웨어 주문현황을 " + hhmm(o.dataAt || o.at) + "에 봤어요 · 넣은 발주가 없습니다"));
+    }
+  }
+
+  /* 어플 관리 — 앱 6개의 상태를 한 줄씩 */
+  function appSet(key, level, word, sub) {
+    setField("app-" + key, word, level === "mute" ? "c-mute" : "c-" + level);
+    if (sub) setField("app-" + key + "-sub", sub);
+  }
+
+  function renderApps(now) {
+    var st = S.sheet.stat || {}, ag = st.misAgent || {};
+    var okN = 0, nAll = 6;
+
+    /* 1. 발주·프랩 어플 — 시트(Apps Script)가 대답하는지 */
+    if (S.sheet.ok) {
+      okN++;
+      appSet("order", "ok", "정상", "Apps Script " + hhmm(S.sheet.at) + " 응답");
+    } else if (S.sheet.stale) {
+      appSet("order", "warn", "지난 값", "Apps Script 응답이 늦어요 · " + hhmm(S.sheet.lastOkAt));
+    } else {
+      appSet("order", "bad", "연결 안 됨", "Apps Script에 못 닿았어요");
+    }
+
+    /* 2. 한글표시사항 어플 — 같은 저장소의 Pages 배포 */
+    if (S.ll.at && S.ll.commitAt) {
+      okN++;
+      appSet("label", "ok", "배포됨", "label-list Pages · 마지막 저장 " + ago((now - new Date(S.ll.commitAt).getTime()) / MIN));
+    } else if (S.ll.stale) {
+      appSet("label", "warn", "지난 값", "저장소를 못 봤어요 · " + hhmm(S.ll.at));
+    } else {
+      appSet("label", "bad", "확인 안 됨", "저장소를 못 봤어요");
+    }
+
+    /* 3. PL 보드 — 비공개 저장소 (인증 키가 있어야 봄) */
+    if (S.apps.pl) {
+      okN++;
+      appSet("pl", "ok", "정상", "저장소 최근 수정 " + ago((now - Date.parse(S.apps.pl)) / MIN));
+    } else if (S.apps.noKey) {
+      appSet("pl", "mute", "키 필요", "비공개 저장소 · ⚙️에 키를 넣으면 보여요");
+    } else {
+      appSet("pl", "warn", "확인 안 됨", "저장소를 못 봤어요");
+    }
+
+    /* 4. HR 보드 — 매장 PC가 플젝 HR에서 받아 둔 기록(hrStatus) + 저장소 */
+    var repoHr = S.apps.hr ? " · 저장소 " + ago((now - Date.parse(S.apps.hr)) / MIN) : "";
+    if (S.kv.hrAt) {
+      okN++;
+      appSet("hr", "ok", "연동됨", "플젝 HR " + ago((now - S.kv.hrAt) / MIN) + repoHr);
+    } else if (S.kv.at) {
+      appSet("hr", "warn", "기록 없음", "플젝 HR에서 아직 받은 게 없어요" + repoHr);
+    } else {
+      appSet("hr", "mute", "모름", "시트 전체를 아직 못 봤어요" + repoHr);
+    }
+
+    /* 5. 데스크 위젯 — Pages 배포 */
+    if (S.hub.at && S.hub.commitAt) {
+      okN++;
+      appSet("widget", "ok", "배포됨", "desk-widgets Pages · 마지막 저장 " + ago((now - new Date(S.hub.commitAt).getTime()) / MIN));
+    } else {
+      appSet("widget", "bad", "확인 안 됨", "저장소를 못 봤어요");
+    }
+
+    /* 6. GW 에이전트 — 매장 PC 확장이 켜져 있는지 */
+    var vw = S.kv.agentVer ? "v" + S.kv.agentVer : "버전 모름";
+    var seen = ag.at ? " · " + ago((now - Number(ag.at)) / MIN) : "";
+    var pl = judgePc().level;
+    if (pl === "ok") { okN++; appSet("gw", "ok", "켜짐", "매장 PC 확장 " + vw + seen); }
+    else if (pl === "warn") appSet("gw", "warn", "조용함", "매장 PC 확장 " + vw + seen);
+    else appSet("gw", "bad", "꺼짐", "매장 PC 확장 " + vw + seen);
+
+    setField("ll-status", okN + "/" + nAll + " 정상", "card-num " + (okN >= nAll ? "c-ok" : (okN >= 4 ? "c-warn" : "c-bad")));
+    setCardTint("cardLl", okN >= nAll ? "ok" : (okN >= 4 ? "warn" : "bad"));
+
+    /* 아래 칸: 승인 기다리는 수정 · 남은 개선 목록 */
+    var prs = Number(S.ll.prs || 0), iss = Number(S.ll.issues || 0);
+    if (S.ll.at) {
+      setField("ll-prs", prs + "건", prs ? "c-warn" : "c-ok");
+      setField("ll-issues", iss + "건", iss >= 10 ? "c-bad" : (iss ? "c-warn" : "c-ok"));
+      setField("ll-when", S.ll.commitAt ? ago((now - new Date(S.ll.commitAt).getTime()) / MIN) : "–");
+      setField("ll-sha", S.ll.sha || "–");
+      setField("ll-basis", "기준 " + hhmm(S.ll.at) + (S.ll.stale ? " · 갱신 못 함" : ""));
+    } else {
+      setField("ll-prs", "–");
+      setField("ll-issues", "–");
+      setField("ll-when", "–");
+      setField("ll-sha", "–");
+      setField("ll-basis", "기준 –");
     }
   }
 
@@ -1668,27 +2126,8 @@
     setFieldTip("pc-order", oj.text, oj.level === "mute" ? "c-mute" : "c-" + oj.level, oj.why);
     renderOrderBlock();
 
-    /* 발주·라벨앱 */
-    if (S.ll.at) {
-      var prs = Number(S.ll.prs || 0);
-      setField("ll-status", S.ll.stale ? "지난 값" : (prs ? "확인 " + prs + "건" : "모두 반영됨"),
-        "card-num " + (S.ll.stale ? "c-warn" : (prs ? "c-warn" : "c-ok")));
-      setField("ll-prs", prs + "건", prs ? "c-warn" : "c-ok");
-      var iss = Number(S.ll.issues || 0);
-      setField("ll-issues", iss + "건", iss >= 10 ? "c-bad" : "");
-      setField("ll-when", S.ll.commitAt ? ago((now - new Date(S.ll.commitAt).getTime()) / MIN) : "–");
-      setField("ll-sha", S.ll.sha || "–");
-      setField("ll-basis", "기준 " + hhmm(S.ll.at) + (S.ll.stale ? " · 갱신 못 함" : ""));
-      setCardTint("cardLl", S.ll.stale ? "warn" : (prs ? "warn" : "ok"));
-    } else {
-      setField("ll-status", "확인 안 됨", "card-num c-bad");
-      setField("ll-prs", "–");
-      setField("ll-issues", "–");
-      setField("ll-when", "–");
-      setField("ll-sha", "–");
-      setField("ll-basis", "기준 –");
-      setCardTint("cardLl", "bad");
-    }
+    /* 어플 관리 — 앱 6개 상태 + 승인 대기 */
+    renderApps(now);
     renderTaskLists();
 
     /* 이 현황판 상태 */
@@ -1704,7 +2143,7 @@
     setField("hub-auto", "30초마다");
     setCardTint("cardHub", hubLv === "warn" ? "warn" : hubLv === "bad" ? "bad" : (hubLv || null));
 
-    /* 함께 일하는 AI 4인 — 코드 기록 기준 */
+    /* 연결된 AI — 코드 기록 기준 */
     setFieldTip("node-pickle", "기록 없음", "c-mute", "이 화면에는 피클의 활동을 알 수 있는 기록이 없어요");
     var recent = 0;
     function nodeTime(field, ts, tip) {
@@ -1794,11 +2233,6 @@
       setField("conn-rate", "60번 중 " + S.ghRate + "번 남음", S.ghRate > 15 ? "c-ok" : (S.ghRate > 5 ? "c-warn" : "c-bad"));
     }
     setField("conn-note", "코드 저장소는 10분에 한 번 확인해요");
-    /* 버튼마다 숨은 비용(한도)을 미리 알려준다 */
-    var left = (S.ghRate === null) ? "" : " · 남은 " + S.ghRate + "번";
-    setBtnTip("ll", "코드 저장소를 " + 3 + "번 확인해요" + left);
-    setBtnTip("hub", "코드 저장소를 " + 2 + "번 확인해요" + left);
-    setBtnTip("nodes", "코드 저장소를 " + 5 + "번 확인해요" + left);
     setCardTint("cardSignals", connLv);
 
     /* 살아 있음 표시 */
@@ -1857,16 +2291,6 @@
       go.textContent = "GitHub에서 보기";
       acts.appendChild(go);
       left.appendChild(acts);
-    } else if (item.retry) {
-      var acts2 = document.createElement("div");
-      acts2.className = "row-acts";
-      var rb = document.createElement("button");
-      rb.type = "button";
-      rb.className = "go-btn small";
-      rb.setAttribute("data-retry", item.retry);
-      rb.textContent = "다시 확인";
-      acts2.appendChild(rb);
-      left.appendChild(acts2);
     }
 
     var v = document.createElement("div");
@@ -2278,11 +2702,16 @@
     mask.classList.add("show");
   }
 
+  var sheetOnClose = null;
+
   function closeSheet() {
     var mask = $("sheetMask"), box = $("sheetBox");
     if (mask) { mask.classList.remove("show"); mask.hidden = true; }
     if (box) box.innerHTML = "";
     sheetPending = null;
+    var cb = sheetOnClose;
+    sheetOnClose = null;
+    if (cb) { try { cb(); } catch (e) {} }
   }
 
   function sheetHead(box, title) {
@@ -2572,16 +3001,6 @@
 
   /* ---------------- 전체 확인 ---------------- */
 
-  function setCardButtonsBusy(on) {
-    var btns = document.querySelectorAll("[data-refresh]");
-    for (var i = 0; i < btns.length; i++) {
-      var b = btns[i];
-      if (b.classList.contains("loading")) continue;
-      if (on) { b.disabled = true; b.setAttribute("data-locked", "1"); }
-      else if (b.getAttribute("data-locked")) { b.disabled = false; b.removeAttribute("data-locked"); }
-    }
-  }
-
   function runSync(forceGithub, quiet) {
     var now = Date.now();
     var blocked = S.ghBlockedAt && now < S.ghBlockedAt;
@@ -2596,21 +3015,15 @@
       S.nextGhAt = now + GH_TTL_MS;
       jobs.push(loadLabelList(!!forceGithub).catch(function () { return null; }));
       jobs.push(loadHub(!!forceGithub).catch(function () { return null; }));
+      loadApps(!!forceGithub).then(function () { render(); }, function () { render(); });
     }
 
-    setCardButtonsBusy(true);
     return Promise.all(jobs).then(function () {
       /* 한도가 얼마 안 남았으면 리셋 때까지 아낀다 */
       if (S.ghRate !== null && S.ghRate <= 12 && S.ghReset) S.nextGhAt = Math.max(S.nextGhAt, S.ghReset);
       S.lastSync = Date.now();
       render();
       return (S.sheet.ok ? 1 : 0) + (S.ll.ok ? 1 : 0) + (S.hub.ok ? 1 : 0);
-    }).then(function (n) {
-      setCardButtonsBusy(false);
-      return n;
-    }, function (e) {
-      setCardButtonsBusy(false);
-      throw e;
     });
   }
 
@@ -2622,96 +3035,12 @@
     return syncing;
   }
 
-  function handleRefresh(kind, btn) {
-    if (!btn || btn.disabled || btn.classList.contains("loading")) return;
-    var bar = barRun(barEl(kind));
-    lockBtn(btn);
-    var ok = true;
-    var p;
-
-    if (kind === "pc") {
-      p = Promise.all([
-        loadSheet(),
-        loadOrderToday(true).catch(function () { return null; })   // 오늘 실제 발주도 함께 새로 본다
-      ]).then(function () {
-        S.lastSync = Date.now(); render();
-        showToast("매장 컴퓨터를 다시 확인했어요");
-      }).catch(function () {
-        S.lastSync = Date.now(); render(); ok = false;
-        showToast(S.sheet.timeout ? "매장 컴퓨터 대답이 늦어요 (8초)" : "매장 컴퓨터가 대답하지 않아요");
-      });
-    } else if (kind === "ll") {
-      p = loadLabelList(true).then(function (d) {
-        S.lastSync = Date.now(); render();
-        showToast("발주앱 확인 완료 · 기다리는 수정 " + d.prs + "건");
-      }).catch(function (e) {
-        S.lastSync = Date.now(); render(); ok = false;
-        showToast(/한도/.test(String(e && e.message)) ? "코드 저장소 한도가 다 됐어요 · 지난 값을 보여드려요" : "발주앱을 지금은 확인할 수 없어요");
-      });
-    } else if (kind === "hub") {
-      p = loadHub(true).then(function (d) {
-        S.lastSync = Date.now(); render();
-        ok = !!d.ok;
-        showToast(d.ok ? "현황판을 다시 확인했어요" : "현황판 기록을 못 봤어요");
-      }).catch(function () {
-        S.lastSync = Date.now(); render(); ok = false;
-        showToast("현황판 기록을 못 봤어요");
-      });
-    } else if (kind === "nodes") {
-      p = Promise.all([
-        loadSheet().catch(function () { return null; }),
-        loadLabelList(true).catch(function () { return null; }),
-        loadHub(true).catch(function () { return null; })
-      ]).then(function () {
-        S.nextGhAt = Math.max(S.nextGhAt, Date.now() + GH_TTL_MS);
-        S.lastSync = Date.now(); render();
-        ok = !!(S.sheet.ok || S.ll.ok || S.hub.ok);
-        showToast(ok ? "AI 활동 기록을 다시 확인했어요" : "지금은 기록을 못 봤어요");
-      });
-    } else if (kind === "signals") {
-      p = loadSheet().then(function () {
-        S.lastSync = Date.now(); render();
-        showToast("연결 상태를 다시 확인했어요");
-      }).catch(function () {
-        S.lastSync = Date.now(); render(); ok = false;
-        showToast("연결이 잠시 끊겼어요");
-      });
-    } else {
-      p = syncAll(true, false).then(function (n) { ok = n > 0; });
-    }
-
-    /* 어떤 경우에도 버튼과 막대가 잠긴 채 남지 않게 */
-    var watchdog = setTimeout(function () {
-      if (btn.classList.contains("loading")) resetBtn(btn);
-      barDone(bar, false);
-    }, WATCHDOG_MS);
-
-    Promise.resolve(p).then(function () {
-      clearTimeout(watchdog);
-      return barDone(bar, ok).then(function () { if (ok) doneBtn(btn); else resetBtn(btn); });
-    }, function () {
-      clearTimeout(watchdog);
-      return barDone(bar, false).then(function () { resetBtn(btn); });
-    });
-  }
-
   document.addEventListener("click", function (e) {
     var target = e.target && e.target.closest ? e.target : null;
     if (!target) return;
 
-    var retry = target.closest("[data-retry]");
-    if (retry) {
-      e.preventDefault();
-      handleRefresh(retry.getAttribute("data-retry"), retry);
-      return;
-    }
     var t = target.closest("[data-toggle]");
     if (t) { toggleList(t); return; }
-    var b = target.closest("[data-refresh]");
-    if (b) {
-      e.preventDefault();
-      handleRefresh(b.getAttribute("data-refresh"), b);
-    }
   });
 
   /* 키보드로도 목록을 열 수 있게 */
@@ -2750,34 +3079,12 @@
     });
   }
 
-  /* 오늘 발주현황 확인 버튼 */
+  /* 매장 컴퓨터에 시키는 두 버튼 */
+  var salesBtn = $("btnSalesLoad");
+  if (salesBtn) salesBtn.addEventListener("click", function () { pcRun("now", salesBtn); });
+
   var orderBtn = $("btnOrderNow");
-  if (orderBtn) {
-    orderBtn.addEventListener("click", function () {
-      if (orderBtn.classList.contains("loading")) return;
-      var bar = barRun($("barOrder"));
-      lockBtn(orderBtn);
-      S.order.open = true;
-      renderOrderBlock();
-      var watchdog = setTimeout(function () {
-        if (orderBtn.classList.contains("loading")) resetBtn(orderBtn);
-        barDone(bar, false);
-      }, WATCHDOG_MS);
-      loadOrderToday(true).then(function (o) {
-        clearTimeout(watchdog);
-        S.lastSync = Date.now();
-        render();
-        showToast(o && o.n > 0 ? "오늘 발주 " + o.n + "건 확인했어요" : "오늘은 넣은 발주가 없어요");
-        return barDone(bar, true).then(function () { doneBtn(orderBtn); });
-      }, function () {
-        clearTimeout(watchdog);
-        S.lastSync = Date.now();
-        render();
-        showToast("지금은 오늘 발주현황을 못 봤어요");
-        return barDone(bar, false).then(function () { resetBtn(orderBtn); });
-      });
-    });
-  }
+  if (orderBtn) orderBtn.addEventListener("click", function () { orderPanelGo(orderBtn); });
 
   /* ---------------- 시간 표시 · 자동 확인 ---------------- */
 
@@ -2849,7 +3156,7 @@
           cur.classList.add("clicking");
           cards.forEach(function (c) { c.classList.remove("active"); });
           cards[idx].classList.add("active");
-          var b = cards[idx].querySelector("[data-refresh]");
+          var b = cards[idx].querySelector(".pc-go, .row.tap, button");
           if (b) { b.classList.add("loading"); setTimeout(function () { b.classList.remove("loading"); }, 900); }
           return wait(170);
         }).then(function () {
