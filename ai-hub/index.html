@@ -175,6 +175,38 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* 진행 막대 */
+  .lbar { position: relative; height: 3.5px; opacity: 0; transition: opacity 0.32s ease; flex: 0 0 auto; }
+  .lbar.on { opacity: 1; }
+  .lbar-in { position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-radius: 999px; overflow: hidden; background: #e9e7e1; }
+  .lbar-in i {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0; display: block;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1d4ed8, #60a5fa);
+    transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .lbar-in b {
+    position: absolute; top: 0; bottom: 0; left: 0; width: 34%; display: block;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9), rgba(255,255,255,0));
+    animation: lflow 1.05s linear infinite; pointer-events: none;
+  }
+  .lbar.done .lbar-in i { background: linear-gradient(90deg, #15803d, #34d399); }
+  .lbar.done .lbar-in b { display: none; }
+  .lbar.fail .lbar-in i { background: linear-gradient(90deg, #b91c1c, #f87171); }
+  .lbar.fail .lbar-in b { display: none; }
+  @keyframes lflow {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(320%); }
+  }
+  .top-lbar { height: 3.5px; }
+  .card-lbar { height: 3px; margin: -6px 0 -5px; }
+
+  /* 다 됐어요 표시 */
+  .mini-btn.done { color: #18794e; border-color: #bfe6d3; background: #effaf4; }
+  .chip-btn.done { color: #18794e; border-color: #bfe6d3; background: #effaf4; }
+  .mini-btn.loading, .mini-btn.done { min-width: 84px; }
+  #btnAllRefresh { min-width: 90px; justify-content: center; }
+
   .c-ok { color: #18794e; }
   .c-warn { color: #a8610a; }
   .c-bad { color: #c93b32; }
@@ -187,7 +219,39 @@
   .row-v strong { color: #18181b; font-weight: 800; }
   .row-line { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .row-sub { font-size: 11.5px; color: #7c7c85; }
+  .row-line.clamp .row-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .row-line .go-btn { margin-top: 5px; }
   .empty { font-size: 13px; color: #71717a; }
+
+  /* 눌러서 펼치는 줄 */
+  .row.tap { cursor: pointer; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
+  .row.tap:active { background: rgba(24, 24, 27, 0.045); }
+  .chev { display: inline-block; font-size: 10px; color: #a1a1aa; margin-left: 4px; transition: transform 0.22s; }
+  .row.tap.open .chev { transform: rotate(180deg); color: #52525b; }
+
+  .task-list { display: flex; flex-direction: column; gap: 7px; margin: -2px 0 1px; }
+  .task-list[hidden] { display: none !important; }
+  .task {
+    background: #ffffff; border: 1px solid #e7e5df; border-radius: 11px;
+    padding: 8px 9px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .task-head { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
+  .task-no { font-size: 11.5px; font-weight: 800; color: #71717a; flex: 0 0 auto; }
+  .task-title {
+    font-size: 12.5px; font-weight: 700; color: #27272a; line-height: 1.38; min-width: 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .go-btn {
+    align-self: flex-start; text-decoration: none;
+    font-size: 12px; font-weight: 800; color: #1d4ed8;
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px;
+    padding: 5px 11px; min-height: 30px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    white-space: nowrap; -webkit-tap-highlight-color: transparent;
+  }
+  .go-btn:active { transform: scale(0.97); background: #dbeafe; }
+  .task-empty { font-size: 12px; color: #71717a; padding: 2px 2px 4px; }
+  .task-more { font-size: 11.5px; color: #a1a1aa; padding-left: 2px; }
   .card-foot { font-size: 10.5px; color: #a1a1aa; letter-spacing: 0.2px; margin-top: -2px; }
   .card-foot span { font-variant-numeric: normal; }
 
@@ -249,6 +313,8 @@
     </div>
   </div>
 
+  <div class="lbar top-lbar" id="barTop"><div class="lbar-in"><i></i><b></b></div></div>
+
   <div class="status-banner" id="statusBanner">
     <span id="bannerTxt">지금 확인하고 있어요</span>
     <span class="banner-time" id="bannerTime"></span>
@@ -284,6 +350,7 @@
             <button class="mini-btn" type="button" data-refresh="pc">다시 확인</button>
           </div>
         </div>
+        <div class="lbar card-lbar" id="barPc"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">마지막 확인</div><div class="row-v"><strong class="c-mute" data-field="pc-seen">–</strong></div></div>
           <div class="row"><div class="row-k">대기 상태</div><div class="row-v"><strong data-field="pc-mode">–</strong></div></div>
@@ -304,9 +371,18 @@
             <button class="mini-btn" type="button" data-refresh="ll">새로 확인</button>
           </div>
         </div>
+        <div class="lbar card-lbar" id="barLl"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
-          <div class="row"><div class="row-k">승인 기다리는 수정</div><div class="row-v"><strong data-field="ll-prs">–</strong></div></div>
-          <div class="row"><div class="row-k">남은 개선 목록</div><div class="row-v"><strong data-field="ll-issues">–</strong></div></div>
+          <div class="row tap" id="rowPrs" data-toggle="listPrs" role="button" tabindex="0" aria-expanded="false">
+            <div class="row-k">승인 기다리는 수정</div>
+            <div class="row-v"><strong data-field="ll-prs">–</strong><span class="chev">▼</span></div>
+          </div>
+          <div class="task-list" id="listPrs" hidden></div>
+          <div class="row tap" id="rowIssues" data-toggle="listIssues" role="button" tabindex="0" aria-expanded="false">
+            <div class="row-k">남은 개선 목록</div>
+            <div class="row-v"><strong data-field="ll-issues">–</strong><span class="chev">▼</span></div>
+          </div>
+          <div class="task-list" id="listIssues" hidden></div>
           <div class="row"><div class="row-k">마지막 고친 때</div><div class="row-v"><strong data-field="ll-when">–</strong></div></div>
         </div>
         <div class="card-foot">최근 저장 번호 <span data-field="ll-sha">–</span></div>
@@ -324,6 +400,7 @@
             <button class="mini-btn" type="button" data-refresh="hub">새로고침</button>
           </div>
         </div>
+        <div class="lbar card-lbar" id="barHub"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">화면 열림</div><div class="row-v"><strong class="c-ok" data-field="hub-open">정상</strong></div></div>
           <div class="row"><div class="row-k">업데이트</div><div class="row-v"><strong data-field="hub-updated">–</strong></div></div>
@@ -349,6 +426,7 @@
             <button class="mini-btn" type="button" data-refresh="nodes">다시 확인</button>
           </div>
         </div>
+        <div class="lbar card-lbar" id="barNodes"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">피클 (모바일 비서)</div><div class="row-v"><strong class="c-mute" data-field="node-pickle">–</strong></div></div>
           <div class="row"><div class="row-k">클로드 (코드 작업)</div><div class="row-v"><strong data-field="node-claude">–</strong></div></div>
@@ -369,6 +447,7 @@
             <button class="mini-btn" type="button" data-refresh="problems">다시 확인</button>
           </div>
         </div>
+        <div class="lbar card-lbar" id="barProblems"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows" id="probRows">
           <div class="empty">아직 확인하기 전이에요.</div>
         </div>
@@ -386,6 +465,7 @@
             <button class="mini-btn" type="button" data-refresh="signals">확인</button>
           </div>
         </div>
+        <div class="lbar card-lbar" id="barSignals"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">매장 컴퓨터 연결</div><div class="row-v"><strong data-field="conn-pc">–</strong></div></div>
           <div class="row"><div class="row-k">코드 저장소 연결</div><div class="row-v"><strong data-field="conn-code">–</strong></div></div>
@@ -575,15 +655,27 @@
     });
   }
 
+  function taskOf(x) {
+    return {
+      number: Number(x && x.number) || 0,
+      title: String((x && x.title) || "").trim(),
+      url: (x && x.html_url) || "",
+      at: (x && x.updated_at) || null
+    };
+  }
+
   function loadLabelList(force) {
     return Promise.all([
       ghJSON(GH + "/repos/" + LL, force),
       ghJSON(GH + "/repos/" + LL + "/pulls?state=open&per_page=100&sort=updated&direction=desc", force),
-      ghJSON(GH + "/repos/" + LL + "/commits?sha=main&per_page=1", force)
+      ghJSON(GH + "/repos/" + LL + "/commits?sha=main&per_page=1", force),
+      ghJSON(GH + "/repos/" + LL + "/issues?state=open&per_page=100&sort=updated&direction=desc", force)
+        .catch(function () { return null; })
     ]).then(function (res) {
       var repo = res[0] || {};
       var pulls = Array.isArray(res[1]) ? res[1] : [];
       var commits = Array.isArray(res[2]) ? res[2] : [];
+      var rawIssues = Array.isArray(res[3]) ? res[3] : null;
       var latestPull = null;
       for (var i = 0; i < pulls.length; i++) {
         if (!latestPull || new Date(pulls[i].updated_at) > new Date(latestPull.updated_at)) latestPull = pulls[i];
@@ -591,12 +683,26 @@
       var c0 = commits[0] || null;
       var prs = pulls.length;
       var openAll = Number(repo.open_issues_count || 0);
+      /* 열린 이슈 목록: 저장소가 같이 돌려주는 PR 항목은 빼고 진짜 이슈만 */
+      var issuesOnly = [];
+      if (rawIssues) {
+        for (var k = 0; k < rawIssues.length; k++) {
+          if (rawIssues[k] && !rawIssues[k].pull_request) issuesOnly.push(rawIssues[k]);
+        }
+      }
+      /* 무슨 일인지 볼 수 있게 제목·번호·주소 보관 (공개 저장소) */
+      var prItems = [];
+      for (var a = 0; a < pulls.length; a++) prItems.push(taskOf(pulls[a]));
+      var issItems = [];
+      for (var b = 0; b < issuesOnly.length; b++) issItems.push(taskOf(issuesOnly[b]));
+
       S.ll = {
         ok: true,
         at: Date.now(),
         err: null,
         prs: prs,
-        issues: Math.max(0, openAll - prs),
+        issues: rawIssues ? issuesOnly.length : Math.max(0, openAll - prs),
+        items: { prs: prItems, issues: issItems },
         sha: c0 ? String(c0.sha || "").slice(0, 7) : null,
         commitAt: c0 ? (c0.commit && c0.commit.committer && c0.commit.committer.date) || null : null,
         pushedAt: repo.pushed_at || null,
@@ -639,8 +745,8 @@
   function buildChecks() {
     var now = Date.now();
     var out = [];
-    function add(level, label, detail) {
-      out.push({ level: clampLevel(level), label: label, detail: detail || "" });
+    function add(level, label, detail, act) {
+      out.push({ level: clampLevel(level), label: label, detail: detail || "", act: act || null });
     }
 
     var st = S.sheet.stat || {};
@@ -685,7 +791,7 @@
     if (S.ll.ok) {
       var prs = Number(S.ll.prs || 0);
       if (prs === 0) add("ok", "발주앱 수정 모두 반영됨", "기다리는 수정이 없어요");
-      else add("warn", "발주앱 수정 승인 대기 " + prs + "건", "승인만 하면 바로 반영돼요");
+      else add("warn", "발주앱 수정 승인 대기 " + prs + "건", "승인만 하면 바로 반영돼요", "prs");
     } else {
       add("bad", "발주앱 수정 상태를 못 봤어요", "잠시 뒤 다시 확인할게요");
     }
@@ -694,8 +800,8 @@
     if (S.ll.ok) {
       var iss = Number(S.ll.issues || 0);
       if (iss === 0) add("ok", "발주앱 할 일 정리됨", "남은 게 없어요");
-      else if (iss < 10) add("warn", "발주앱 남은 할 일 " + iss + "건", "고칠 일이 " + iss + "건 쌓여 있어요");
-      else add("bad", "발주앱 남은 할 일 " + iss + "건", "많이 쌓였어요. 하나씩 줄여요");
+      else if (iss < 10) add("warn", "발주앱 남은 할 일 " + iss + "건", "고칠 일이 " + iss + "건 쌓여 있어요", "issues");
+      else add("bad", "발주앱 남은 할 일 " + iss + "건", "많이 쌓였어요. 하나씩 줄여요", "issues");
     } else {
       add("bad", "발주앱 할 일을 못 봤어요", "잠시 뒤 다시 확인할게요");
     }
@@ -802,6 +908,7 @@
       setField("ll-sha", "–");
       setCardTint("cardLl", "bad");
     }
+    renderTaskLists();
 
     /* 이 현황판 상태 */
     var hubLv, hubWord;
@@ -924,12 +1031,32 @@
     k.className = "row-k";
     k.textContent = item.label;
     left.appendChild(k);
-    if (item.detail) {
+
+    /* 무슨 일인지 바로 보이게 제목과 가는 길을 붙임 */
+    var items = item.act ? itemsOf(item.act) : [];
+    var top = items.length ? items[0] : null;
+    var detail = item.detail;
+    if (top) {
+      left.className = "row-line clamp";
+      detail = "#" + top.number + " · " + (top.title || "(제목 없음)") +
+        (items.length > 1 ? " 외 " + (items.length - 1) + "건" : "");
+    }
+    if (detail) {
       var d = document.createElement("div");
       d.className = "row-sub";
-      d.textContent = item.detail;
+      d.textContent = detail;
       left.appendChild(d);
     }
+    if (top && top.url) {
+      var go = document.createElement("a");
+      go.className = "go-btn";
+      go.href = top.url;
+      go.target = "_blank";
+      go.rel = "noopener";
+      go.textContent = goLabel(item.act);
+      left.appendChild(go);
+    }
+
     var v = document.createElement("div");
     v.className = "row-v";
     var s = document.createElement("strong");
@@ -939,6 +1066,171 @@
     row.appendChild(left);
     row.appendChild(v);
     return row;
+  }
+
+  /* ---------------- 진행 막대 ---------------- */
+
+  var MIN_BAR_MS = 550;
+  var BAR_OF = {
+    all: "barTop", pc: "barPc", ll: "barLl",
+    hub: "barHub", nodes: "barNodes", problems: "barProblems", signals: "barSignals"
+  };
+
+  function barEl(kind) { return $(BAR_OF[kind] || ""); }
+
+  function barRun(bar) {
+    if (!bar) return null;
+    var fill = bar.querySelector(".lbar-in i");
+    if (!fill) return null;
+    var h = { bar: bar, fill: fill, t0: Date.now(), timer: null };
+    bar.classList.remove("done", "fail");
+    bar.classList.add("on");
+    bar.style.opacity = "";
+    fill.style.transition = "none";
+    fill.style.width = "6%";
+    void fill.offsetWidth;
+    fill.style.transition = "";
+    h.timer = setInterval(function () {
+      var p = 6 + 86 * (1 - Math.exp(-(Date.now() - h.t0) / 620));
+      if (p > 92) p = 92;
+      fill.style.width = p.toFixed(1) + "%";
+    }, 80);
+    return h;
+  }
+
+  function barDone(h, ok) {
+    if (!h) return Promise.resolve();
+    var waitMs = Math.max(0, MIN_BAR_MS - (Date.now() - h.t0));
+    return new Promise(function (res) {
+      setTimeout(function () {
+        clearInterval(h.timer);
+        h.bar.classList.add(ok === false ? "fail" : "done");
+        h.fill.style.width = "100%";
+        setTimeout(function () { h.bar.style.opacity = "0"; }, 780);
+        setTimeout(function () {
+          h.bar.classList.remove("on", "done", "fail");
+          h.bar.style.opacity = "";
+          h.fill.style.transition = "none";
+          h.fill.style.width = "0%";
+          void h.fill.offsetWidth;
+          h.fill.style.transition = "";
+        }, 1180);
+        res();
+      }, waitMs);
+    });
+  }
+
+  function lockBtn(btn) {
+    if (!btn) return;
+    btn.__tok = (btn.__tok || 0) + 1;
+    if (btn.id !== "btnAllRefresh" && !btn.getAttribute("data-base")) {
+      btn.setAttribute("data-base", (btn.textContent || "").trim());
+    }
+    btn.classList.remove("done");
+    btn.classList.add("loading");
+    btn.disabled = true;
+    if (btn.id === "btnAllRefresh") setText("refreshLabel", "확인 중…");
+    else btn.textContent = "확인 중…";
+  }
+
+  function doneBtn(btn) {
+    if (!btn) return;
+    var my = (btn.__tok || 0) + 1;
+    btn.__tok = my;
+    btn.classList.remove("loading");
+    btn.classList.add("done");
+    btn.disabled = false;
+    if (btn.id === "btnAllRefresh") setText("refreshLabel", "✓ 완료");
+    else btn.textContent = "✓ 완료";
+    setTimeout(function () {
+      if (btn.__tok !== my) return;
+      resetBtn(btn);
+    }, 2000);
+  }
+
+  function resetBtn(btn) {
+    if (!btn) return;
+    btn.__tok = (btn.__tok || 0) + 1;
+    btn.classList.remove("loading", "done");
+    btn.disabled = false;
+    if (btn.id === "btnAllRefresh") setText("refreshLabel", "새로고침");
+    else btn.textContent = btn.getAttribute("data-base") || "확인";
+  }
+
+  /* ---------------- 열린 일 목록 ---------------- */
+
+  var openLists = { prs: false, issues: false };
+
+  function itemsOf(kind) {
+    var it = (S.ll && S.ll.items) || {};
+    return Array.isArray(it[kind]) ? it[kind] : [];
+  }
+
+  function goLabel(kind) {
+    return kind === "issues" ? "확인하러 가기" : "확인·승인하러 가기";
+  }
+
+  function taskRow(kind, it) {
+    var wrap = document.createElement("div");
+    wrap.className = "task";
+    var head = document.createElement("div");
+    head.className = "task-head";
+    var no = document.createElement("span");
+    no.className = "task-no";
+    no.textContent = "#" + it.number;
+    var t = document.createElement("span");
+    t.className = "task-title";
+    t.textContent = it.title || "(제목 없음)";
+    head.appendChild(no);
+    head.appendChild(t);
+    wrap.appendChild(head);
+    if (it.url) {
+      var go = document.createElement("a");
+      go.className = "go-btn";
+      go.href = it.url;
+      go.target = "_blank";
+      go.rel = "noopener";
+      go.textContent = goLabel(kind);
+      wrap.appendChild(go);
+    }
+    return wrap;
+  }
+
+  function renderTaskList(kind, boxId) {
+    var box = $(boxId);
+    if (!box) return;
+    box.innerHTML = "";
+    var items = itemsOf(kind);
+    if (!items.length) {
+      var e = document.createElement("div");
+      e.className = "task-empty";
+      e.textContent = (S.ll && S.ll.ok) ? "지금은 없어요." : "목록을 아직 못 받았어요.";
+      box.appendChild(e);
+    } else {
+      var n = Math.min(items.length, 8);
+      for (var i = 0; i < n; i++) box.appendChild(taskRow(kind, items[i]));
+      if (items.length > n) {
+        var more = document.createElement("div");
+        more.className = "task-more";
+        more.textContent = "그 밖에 " + (items.length - n) + "건 더 있어요";
+        box.appendChild(more);
+      }
+    }
+    box.hidden = !openLists[kind];
+  }
+
+  function renderTaskLists() {
+    renderTaskList("prs", "listPrs");
+    renderTaskList("issues", "listIssues");
+    var ids = ["listPrs", "listIssues"];
+    for (var i = 0; i < ids.length; i++) {
+      var b = $(ids[i]);
+      var row = document.querySelector('[data-toggle="' + ids[i] + '"]');
+      if (row && b) {
+        row.setAttribute("aria-expanded", b.hidden ? "false" : "true");
+        row.classList[b.hidden ? "remove" : "add"]("open");
+      }
+    }
   }
 
   /* ---------------- 전체 확인 ---------------- */
@@ -972,14 +1264,16 @@
 
   function handleRefresh(kind, btn) {
     if (!btn || btn.classList.contains("loading")) return;
-    setBusy(btn, true);
+    var bar = barRun(barEl(kind));
+    lockBtn(btn);
+    var ok = true;
     var p;
     if (kind === "pc") {
       p = loadSheet().then(function () {
         S.lastSync = Date.now(); render();
         showToast("매장 컴퓨터를 다시 확인했어요", "ok");
       }).catch(function () {
-        S.lastSync = Date.now(); render();
+        S.lastSync = Date.now(); render(); ok = false;
         showToast("매장 컴퓨터가 대답하지 않아요", "err");
       });
     } else if (kind === "ll") {
@@ -987,15 +1281,16 @@
         S.lastSync = Date.now(); render();
         showToast("발주앱 확인 완료 · 기다리는 수정 " + d.prs + "건", "ok");
       }).catch(function () {
-        S.lastSync = Date.now(); render();
+        S.lastSync = Date.now(); render(); ok = false;
         showToast("발주앱을 지금은 확인할 수 없어요", "err");
       });
     } else if (kind === "hub") {
       p = loadHub(true).then(function (d) {
         S.lastSync = Date.now(); render();
+        ok = !!d.ok;
         showToast(d.ok ? "현황판을 다시 확인했어요" : "현황판 기록을 못 봤어요", d.ok ? "ok" : "warn");
       }).catch(function () {
-        S.lastSync = Date.now(); render();
+        S.lastSync = Date.now(); render(); ok = false;
         showToast("현황판 기록을 못 봤어요", "err");
       });
     } else if (kind === "nodes") {
@@ -1003,23 +1298,42 @@
         .then(function () {
           S.nextGhAt = Date.now() + GH_TTL_MS;
           S.lastSync = Date.now(); render();
-          showToast("AI 4인 활동을 다시 확인했어요", "ok");
+          ok = !!(S.sheet.ok || S.ll.ok || S.hub.ok);
+          showToast("AI 4인 활동을 다시 확인했어요", ok ? "ok" : "warn");
         });
     } else if (kind === "signals") {
       p = loadSheet().then(function () {
         S.lastSync = Date.now(); render();
         showToast("연결 상태를 다시 확인했어요", "ok");
       }).catch(function () {
-        S.lastSync = Date.now(); render();
+        S.lastSync = Date.now(); render(); ok = false;
         showToast("연결이 잠시 끊겼어요", "err");
       });
     } else {
-      p = syncAll(true, "전체 확인");
+      p = syncAll(true, "전체 확인").then(function (n) { ok = n > 0; });
     }
-    Promise.resolve(p).then(function () { setBusy(btn, false); }, function () { setBusy(btn, false); });
+
+    Promise.resolve(p).then(function () {
+      return barDone(bar, ok);
+    }).then(function () {
+      if (ok) doneBtn(btn); else resetBtn(btn);
+    }, function () {
+      return barDone(bar, false).then(function () { resetBtn(btn); });
+    });
   }
 
   document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("[data-toggle]") : null;
+    if (t) {
+      var id = t.getAttribute("data-toggle");
+      var kind = id === "listPrs" ? "prs" : "issues";
+      openLists[kind] = !openLists[kind];
+      t.classList.toggle("open", openLists[kind]);
+      t.setAttribute("aria-expanded", openLists[kind] ? "true" : "false");
+      var box = $(id);
+      if (box) box.hidden = !openLists[kind];
+      return;
+    }
     var b = e.target && e.target.closest ? e.target.closest("[data-refresh]") : null;
     if (b) {
       e.preventDefault();
@@ -1031,20 +1345,18 @@
   if (allBtn) {
     allBtn.addEventListener("click", function () {
       if (allBtn.classList.contains("loading")) return;
-      setBusy(allBtn, true);
+      var bar = barRun($("barTop"));
+      lockBtn(allBtn);
       allBtn.classList.add("syncing");
-      setText("refreshLabel", "확인 중");
       sec = AUTO_SEC;
-      syncAll(true, "전체 확인").then(function () {
-        setBusy(allBtn, false);
-        allBtn.classList.remove("syncing");
-        setText("refreshLabel", "새로고침");
-        updateLiveBits();
-      }, function () {
-        setBusy(allBtn, false);
-        allBtn.classList.remove("syncing");
-        setText("refreshLabel", "새로고침");
-      });
+      var ok = false;
+      syncAll(true, "전체 확인").then(function (n) { ok = n > 0; }, function () { ok = false; })
+        .then(function () { return barDone(bar, ok); })
+        .then(function () {
+          allBtn.classList.remove("syncing");
+          if (ok) doneBtn(allBtn); else resetBtn(allBtn);
+          updateLiveBits();
+        });
     });
   }
 
