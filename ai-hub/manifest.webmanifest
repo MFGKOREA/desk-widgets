@@ -1,0 +1,16 @@
+{
+  "name": "수원컨벤션 AI 현황판",
+  "short_name": "HUB",
+  "description": "매장 컴퓨터와 발주앱 상태를 30초마다 확인하는 현황판",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eeece8",
+  "theme_color": "#eeece8",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-face.png", "sizes": "160x160", "type": "image/png", "purpose": "any" }
+  ]
+}

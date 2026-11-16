@@ -7,19 +7,44 @@
 <meta name="description" content="수원컨벤션센터점 매장 컴퓨터와 발주앱 상태를 30초마다 자동으로 확인하는 현황판">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="HUB">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#eeece8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eeece8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131312" media="(prefers-color-scheme: dark)">
 <title>HUB · AI 현황판</title>
 <style>
+  :root {
+    --bg: #eeece8;
+    --win: #ffffff;
+    --win-line: #e4e2dc;
+    --line: #efede8;
+    --line2: #e7e5df;
+    --ink: #18181b;
+    --ink2: #27272a;
+    --mute: #5f5f68;
+    --mute2: #6b6b74;
+    --btn-bg: #f7f6f3;
+    --btn-line: #e4e2dc;
+    --btn-ink: #3f3f46;
+    --card: #f6f6f4;
+    --card-line: #eceae4;
+    --task: #ffffff;
+    --stat: #f7f7f5;
+    --bar-bg: #efede8;
+    --bar-in: #e9e7e1;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
                  "Noto Sans KR", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
     font-variant-numeric: tabular-nums;
-    background: #eeece8;
-    color: #18181b;
+    background: var(--bg);
+    color: var(--ink);
     padding: 8px 8px calc(14px + env(safe-area-inset-bottom));
     min-height: 100vh;
     line-height: 1.42;
@@ -28,20 +53,20 @@
   .win {
     max-width: 1020px;
     margin: 0 auto;
-    background: #ffffff;
-    border: 1px solid #e4e2dc;
+    background: var(--win);
+    border: 1px solid var(--win-line);
     border-radius: 16px;
     box-shadow: 0 14px 34px rgba(24, 24, 27, 0.08), 0 2px 6px rgba(24, 24, 27, 0.04);
-    overflow: hidden;
     position: relative;
   }
 
   /* 창 상단 */
   .win-top {
     padding: 9px 11px;
-    border-bottom: 1px solid #efede8;
+    border-bottom: 1px solid var(--line);
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    background: rgba(255, 255, 255, 0.94);
+    background: var(--win);
+    border-radius: 16px 16px 0 0;
   }
   .top-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .dots { display: flex; gap: 5px; align-items: center; flex: 0 0 auto; }
@@ -54,7 +79,7 @@
     box-shadow: 0 1px 3px rgba(24, 24, 27, 0.14); background: #fdfbf4;
   }
   .addr {
-    font-size: 13px; font-weight: 800; color: #18181b;
+    font-size: 13px; font-weight: 800; color: var(--ink);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     letter-spacing: -0.2px;
   }
@@ -62,13 +87,14 @@
   .chip-btn {
     font-size: 12px; font-weight: 700;
     min-height: 32px; padding: 5px 11px; border-radius: 999px;
-    border: 1px solid #e4e2dc; background: #f7f6f3; color: #3f3f46;
+    border: 1px solid var(--btn-line); background: var(--btn-bg); color: var(--btn-ink);
     cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
     font-family: inherit;
     transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s, border-color 0.18s;
   }
   .chip-btn:hover { background: #efede7; border-color: #d4d1c9; }
   .chip-btn:active { transform: scale(0.94); }
+  .chip-btn:disabled { cursor: default; }
   .chip-btn.primary { background: #18181b; color: #fff; border-color: #18181b; }
   .chip-btn.primary:hover { background: #27272a; }
   .chip-btn.syncing { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
@@ -79,17 +105,29 @@
     50% { opacity: 0.35; transform: scale(0.75); }
   }
 
-  /* 확인 안내 띠 */
+  /* 확인 안내 띠 (스크롤해도 위에 붙어 있음) */
   .status-banner {
-    display: none; align-items: center; justify-content: space-between; gap: 8px;
+    display: none; align-items: center; gap: 8px;
     background: #18181b; color: #fff; padding: 9px 13px;
     font-size: 13px; font-weight: 700; border-bottom: 1px solid #27272a;
+    position: sticky; top: 0; z-index: 40;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   }
   .status-banner.show { display: flex; }
-  .status-banner.ok { background: #14532d; }
-  .status-banner.warn { background: #7c2d12; }
-  .status-banner.err { background: #7f1d1d; }
-  .banner-time { opacity: 0.72; font-size: 11.5px; font-weight: 600; flex: 0 0 auto; }
+  .status-banner.ok { background: #14532d; border-bottom-color: #166534; }
+  .status-banner.warn { background: #7c2d12; border-bottom-color: #9a3412; }
+  .status-banner.err { background: #7f1d1d; border-bottom-color: #991b1b; }
+  .status-banner.demo { background: #1e3a8a; border-bottom-color: #1d4ed8; }
+  #bannerTxt {
+    min-width: 0; flex: 1 1 auto;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .banner-badge {
+    flex: 0 0 auto; font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
+    padding: 2px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.22);
+  }
+  .banner-badge[hidden] { display: none; }
+  .banner-time { opacity: 0.82; font-size: 11.5px; font-weight: 600; flex: 0 0 auto; }
 
   .toast {
     position: fixed; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%;
@@ -106,24 +144,24 @@
 
   /* 상단 요약 */
   .hero { display: flex; flex-direction: column; gap: 8px; }
-  .hero-k { font-size: 12.5px; font-weight: 600; color: #71717a; }
-  .hero-k strong { color: #18181b; font-size: 13.5px; font-weight: 800; }
+  .hero-k { font-size: 12.5px; font-weight: 600; color: var(--mute); }
+  .hero-k strong { color: var(--ink); font-size: 13.5px; font-weight: 800; }
   .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
   .stat {
     border-radius: 13px; padding: 9px 4px 8px; text-align: center;
-    border: 1px solid #eceae4; background: #f7f7f5;
+    border: 1px solid var(--card-line); background: var(--stat);
   }
   .stat-n { font-size: 26px; font-weight: 800; letter-spacing: -1px; line-height: 1.05; }
   .stat-u { font-size: 13px; font-weight: 700; margin-left: 1px; letter-spacing: 0; }
   .stat-k { font-size: 12px; font-weight: 700; margin-top: 2px; }
   .stat.ok { background: #f1faf5; border-color: #d7efe3; }
-  .stat.ok .stat-n, .stat.ok .stat-u, .stat.ok .stat-k { color: #18794e; }
+  .stat.ok .stat-n, .stat.ok .stat-u, .stat.ok .stat-k { color: #13713f; }
   .stat.warn { background: #fdf8ee; border-color: #f2e4c8; }
-  .stat.warn .stat-n, .stat.warn .stat-u, .stat.warn .stat-k { color: #a8610a; }
+  .stat.warn .stat-n, .stat.warn .stat-u, .stat.warn .stat-k { color: #93540a; }
   .stat.bad { background: #fdf3f2; border-color: #f6d9d5; }
-  .stat.bad .stat-n, .stat.bad .stat-u, .stat.bad .stat-k { color: #c0392f; }
+  .stat.bad .stat-n, .stat.bad .stat-u, .stat.bad .stat-k { color: #b3322a; }
 
-  .ratio-bar { height: 8px; border-radius: 999px; background: #efede8; display: flex; overflow: hidden; gap: 2px; }
+  .ratio-bar { height: 8px; border-radius: 999px; background: var(--bar-bg); display: flex; overflow: hidden; gap: 2px; }
   .seg-ok { background: #269c68; transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
   .seg-warn { background: #e5a00d; transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
   .seg-bad { background: #d63b30; transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -131,7 +169,7 @@
   /* 카드 */
   .grid { display: grid; grid-template-columns: 1fr; gap: 9px; }
   .card {
-    background: #f6f6f4; border: 1px solid #eceae4; border-radius: 15px;
+    background: var(--card); border: 1px solid var(--card-line); border-radius: 15px;
     padding: 12px 13px; display: flex; flex-direction: column; gap: 9px;
     transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s, box-shadow 0.18s;
     animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
@@ -149,13 +187,13 @@
 
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .card-head { min-width: 0; }
-  .card-title { font-size: 16px; font-weight: 800; color: #18181b; letter-spacing: -0.3px; }
-  .card-sub { font-size: 11.5px; color: #7c7c85; margin-top: 2px; }
+  .card-title { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.3px; }
+  .card-sub { font-size: 11.5px; color: var(--mute); margin-top: 2px; }
   .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex: 0 0 auto; }
   .card-num { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; white-space: nowrap; }
   .mini-btn {
-    font-size: 12px; font-weight: 700; color: #52525b;
-    background: rgba(255, 255, 255, 0.9); border: 1px solid #e2e0d8;
+    font-size: 12px; font-weight: 700; color: #4b4b54;
+    background: var(--win); border: 1px solid #e2e0d8;
     min-height: 32px; padding: 5px 11px;
     border-radius: 999px; cursor: pointer; font-family: inherit;
     display: inline-flex; align-items: center; justify-content: center; gap: 4px;
@@ -164,6 +202,7 @@
   }
   .mini-btn:hover { background: #fff; color: #18181b; border-color: #cfccc2; }
   .mini-btn:active { transform: scale(0.95); }
+  .mini-btn:disabled { cursor: default; }
   .mini-btn.loading { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
 
   /* 돌아가는 표시 */
@@ -178,7 +217,7 @@
   /* 진행 막대 */
   .lbar { position: relative; height: 3.5px; opacity: 0; transition: opacity 0.32s ease; flex: 0 0 auto; }
   .lbar.on { opacity: 1; }
-  .lbar-in { position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-radius: 999px; overflow: hidden; background: #e9e7e1; }
+  .lbar-in { position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-radius: 999px; overflow: hidden; background: var(--bar-in); }
   .lbar-in i {
     position: absolute; left: 0; top: 0; bottom: 0; width: 0; display: block;
     border-radius: 999px;
@@ -202,62 +241,67 @@
   .card-lbar { height: 3px; margin: -6px 0 -5px; }
 
   /* 다 됐어요 표시 */
-  .mini-btn.done { color: #18794e; border-color: #bfe6d3; background: #effaf4; }
-  .chip-btn.done { color: #18794e; border-color: #bfe6d3; background: #effaf4; }
+  .mini-btn.done { color: #13713f; border-color: #bfe6d3; background: #effaf4; }
+  .chip-btn.done { color: #13713f; border-color: #bfe6d3; background: #effaf4; }
   .mini-btn { min-width: 84px; }
   #btnAllRefresh { justify-content: center; min-width: 78px; }
   #btnAllRefresh.loading .pulse { display: none; }
   #btnAllRefresh.loading::before { display: none; }
 
-  .c-ok { color: #18794e; }
-  .c-warn { color: #a8610a; }
-  .c-bad { color: #c93b32; }
-  .c-mute { color: #71717a; }
+  .c-ok { color: #13713f; }
+  .c-warn { color: #93540a; }
+  .c-bad { color: #b3322a; }
+  .c-mute { color: var(--mute2); }
 
-  .rows { border-top: 1px solid #e7e5df; padding-top: 9px; display: flex; flex-direction: column; gap: 9px; }
+  .rows { border-top: 1px solid var(--line2); padding-top: 9px; display: flex; flex-direction: column; gap: 9px; }
   .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .row-k { font-size: 14px; font-weight: 600; color: #27272a; min-width: 0; }
-  .row-v { font-size: 14.5px; text-align: right; color: #52525b; font-weight: 600; flex: 0 0 auto; }
-  .row-v strong { color: #18181b; font-weight: 800; }
-  .row-line { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .row-sub { font-size: 11.5px; color: #7c7c85; }
+  .row-k { font-size: 14px; font-weight: 600; color: var(--ink2); min-width: 0; }
+  .row-v { font-size: 14.5px; text-align: right; color: #4b4b54; font-weight: 600; flex: 0 0 auto; }
+  .row-v strong { color: var(--ink); font-weight: 800; }
+  .row-line { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+  .row-sub { font-size: 11.5px; color: var(--mute); }
   .row-line.clamp .row-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .row-line .go-btn { margin-top: 5px; }
-  .empty { font-size: 13px; color: #71717a; }
+  .row-acts { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .row-acts .go-btn { margin-top: 0; }
+  .empty { font-size: 13px; color: var(--mute); }
 
   /* 눌러서 펼치는 줄 */
   .row.tap { cursor: pointer; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
   .row.tap:active { background: rgba(24, 24, 27, 0.045); }
-  .chev { display: inline-block; font-size: 10px; color: #a1a1aa; margin-left: 4px; transition: transform 0.22s; }
-  .row.tap.open .chev { transform: rotate(180deg); color: #52525b; }
+  .row.tap:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 2px; }
+  .chev { display: inline-block; font-size: 10px; color: var(--mute2); margin-left: 4px; transition: transform 0.22s; }
+  .row.tap.open .chev { transform: rotate(180deg); color: #4b4b54; }
 
   .task-list { display: flex; flex-direction: column; gap: 7px; margin: -2px 0 1px; }
   .task-list[hidden] { display: none !important; }
-  .task {
-    background: #ffffff; border: 1px solid #e7e5df; border-radius: 11px;
-    padding: 8px 9px; display: flex; flex-direction: column; gap: 6px;
-  }
+  .task { background: var(--task); border: 1px solid var(--line2); border-radius: 11px; padding: 8px 9px; display: flex; flex-direction: column; gap: 6px; }
+  .task-meta { font-size: 11.5px; font-weight: 600; color: var(--mute2); padding: 0 2px 1px; }
+  .task-meta.stale { color: #93540a; }
   .task-head { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
-  .task-no { font-size: 11.5px; font-weight: 800; color: #71717a; flex: 0 0 auto; }
+  .task-no { font-size: 11.5px; font-weight: 800; color: var(--mute2); flex: 0 0 auto; }
   .task-title {
-    font-size: 12.5px; font-weight: 700; color: #27272a; line-height: 1.38; min-width: 0;
+    font-size: 12.5px; font-weight: 700; color: var(--ink2); line-height: 1.38; min-width: 0;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
+  .task-at { font-size: 11px; font-weight: 600; color: var(--mute2); }
   .go-btn {
     align-self: flex-start; text-decoration: none;
     font-size: 12px; font-weight: 800; color: #1d4ed8;
     background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px;
-    padding: 5px 11px; min-height: 30px;
+    padding: 5px 11px; min-height: 30px; font-family: inherit; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     white-space: nowrap; -webkit-tap-highlight-color: transparent;
   }
   .go-btn:active { transform: scale(0.97); background: #dbeafe; }
-  .task-empty { font-size: 12px; color: #71717a; padding: 2px 2px 4px; }
-  .task-more { font-size: 11.5px; color: #a1a1aa; padding-left: 2px; }
-  .card-foot { font-size: 10.5px; color: #a1a1aa; letter-spacing: 0.2px; margin-top: -2px; }
+  .go-btn.small { font-size: 11.5px; min-height: 28px; padding: 4px 10px; }
+  .task-empty { font-size: 12px; color: var(--mute); padding: 2px 2px 4px; }
+  .task-more { font-size: 11.5px; color: var(--mute2); padding-left: 2px; }
+  .card-foot { font-size: 10.5px; color: var(--mute2); letter-spacing: 0.2px; margin-top: -2px; }
   .card-foot span { font-variant-numeric: normal; }
+  .card-note { font-size: 10.5px; color: var(--mute2); line-height: 1.5; margin-top: -3px; }
 
-  .foot { font-size: 11.5px; color: #8b8b93; line-height: 1.65; padding: 2px 2px 0; }
+  .foot { font-size: 11.5px; color: var(--mute); line-height: 1.65; padding: 2px 2px 0; }
 
   .cursor {
     position: fixed; width: 18px; height: 18px; border-radius: 50%;
@@ -283,7 +327,7 @@
   @media (min-width: 700px) {
     body { padding: 16px; }
     .win { border-radius: 18px; }
-    .win-top { padding: 11px 16px; }
+    .win-top { padding: 11px 16px; border-radius: 18px 18px 0 0; }
     .addr { font-size: 13.5px; }
     .brand { width: 34px; height: 34px; border-radius: 11px; }
     .body { padding: 18px 20px 22px; gap: 14px; }
@@ -291,6 +335,70 @@
     .hero-stats { gap: 9px; }
     .stat { padding: 11px 6px 10px; }
     .card { padding: 13px 15px; }
+  }
+
+  /* 어두운 화면 */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131312;
+      --win: #1b1b1a;
+      --win-line: #2e2e2c;
+      --line: #2a2a28;
+      --line2: #2e2e2c;
+      --ink: #f1efe9;
+      --ink2: #e2e0d9;
+      --mute: #b0aeb0;
+      --mute2: #a3a1a6;
+      --btn-bg: #26262a;
+      --btn-line: #3a3a3f;
+      --btn-ink: #d6d4cd;
+      --card: #222221;
+      --card-line: #31312f;
+      --task: #1e1e1d;
+      --stat: #222221;
+      --bar-bg: #2c2c2a;
+      --bar-in: #34342f;
+    }
+    body { color: var(--ink); }
+    .win { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); }
+    .win-top { background: #1b1b1a; }
+    .brand { background: #2a2a26; }
+    .chip-btn:hover { background: #303035; border-color: #45454b; }
+    .chip-btn.primary { background: #f1efe9; color: #18181b; border-color: #f1efe9; }
+    .chip-btn.primary:hover { background: #ffffff; }
+    .chip-btn.syncing { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
+    .mini-btn { background: #26262a; border-color: #3a3a3f; color: #cccac4; }
+    .mini-btn:hover { background: #303035; color: #fff; border-color: #45454b; }
+    .mini-btn.loading { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
+    .mini-btn.done, .chip-btn.done { background: #10281c; border-color: #1f5236; color: #6ee7a8; }
+    .stat.ok { background: #10251a; border-color: #1d4732; }
+    .stat.ok .stat-n, .stat.ok .stat-u, .stat.ok .stat-k { color: #62d99a; }
+    .stat.warn { background: #2a2113; border-color: #4a3718; }
+    .stat.warn .stat-n, .stat.warn .stat-u, .stat.warn .stat-k { color: #f0b352; }
+    .stat.bad { background: #2a1715; border-color: #4c2521; }
+    .stat.bad .stat-n, .stat.bad .stat-u, .stat.bad .stat-k { color: #f5837a; }
+    .card.tint-bad { background: #251717; border-color: #4a2622; }
+    .card.tint-ok { background: #14211a; border-color: #234a35; }
+    .card.tint-warn { background: #241d12; border-color: #48381c; }
+    .card:hover { border-color: #45443f; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3); }
+    .card.active { border-color: #f1efe9; box-shadow: 0 0 0 1.5px #f1efe9; }
+    .row-v { color: #c3c1ba; }
+    .row-v strong { color: #f6f4ee; }
+    .c-ok { color: #5fd394; }
+    .c-warn { color: #f0b352; }
+    .c-bad { color: #f5837a; }
+    .c-mute { color: #a3a1a6; }
+    .row.tap:active { background: rgba(255, 255, 255, 0.06); }
+    .task-meta.stale { color: #f0b352; }
+    .go-btn { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
+    .go-btn:active { background: #1c2d52; }
+    .lbar-in b { background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.45), rgba(255,255,255,0)); }
+    .status-banner { background: #242422; border-bottom-color: #34342f; }
+    .status-banner.ok { background: #14532d; border-bottom-color: #166534; }
+    .status-banner.warn { background: #7c2d12; border-bottom-color: #9a3412; }
+    .status-banner.err { background: #7f1d1d; border-bottom-color: #991b1b; }
+    .status-banner.demo { background: #1e3a8a; border-bottom-color: #1d4ed8; }
+    .toast { background: #f1efe9; color: #18181b; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -310,14 +418,15 @@
       <div class="addr">수원컨벤션 AI 현황판</div>
     </div>
     <div class="top-actions">
-      <button class="chip-btn" id="btnAllRefresh" type="button"><span class="pulse" id="liveDot"></span><span id="refreshLabel">새로고침</span></button>
+      <button class="chip-btn" id="btnAllRefresh" type="button" aria-label="전체 다시 확인"><span class="pulse" id="liveDot"></span><span id="refreshLabel">새로고침</span></button>
       <button class="chip-btn primary" id="btnDemo" type="button">시연</button>
     </div>
   </div>
 
-  <div class="lbar top-lbar" id="barTop"><div class="lbar-in"><i></i><b></b></div></div>
+  <div class="lbar top-lbar" id="barTop" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
 
-  <div class="status-banner" id="statusBanner">
+  <div class="status-banner" id="statusBanner" role="status" aria-live="polite">
+    <span class="banner-badge" id="bannerBadge" hidden>시연</span>
     <span id="bannerTxt">지금 확인하고 있어요</span>
     <span class="banner-time" id="bannerTime"></span>
   </div>
@@ -325,13 +434,13 @@
   <div class="body">
 
     <div class="hero">
-      <div class="hero-k">전체 <strong id="heroTotal">9</strong>가지 점검 · <span id="heroWhen">지금 확인 중</span></div>
+      <div class="hero-k">점검 <strong id="heroTotal">8</strong>가지 · 매장 <strong id="heroStore">6</strong> · 이 화면 <span id="heroSelf">2</span> · <span id="heroWhen">지금 확인 중</span></div>
       <div class="hero-stats">
         <div class="stat ok"><div class="stat-n"><span id="heroOkNumber">–</span><span class="stat-u">개</span></div><div class="stat-k">정상</div></div>
         <div class="stat warn"><div class="stat-n"><span id="heroWarnNumber">–</span><span class="stat-u">개</span></div><div class="stat-k">주의</div></div>
         <div class="stat bad"><div class="stat-n"><span id="heroBadNumber">–</span><span class="stat-u">개</span></div><div class="stat-k">확인 필요</div></div>
       </div>
-      <div class="ratio-bar">
+      <div class="ratio-bar" aria-hidden="true">
         <span class="seg-ok" id="segOk" style="width:0%"></span>
         <span class="seg-warn" id="segWarn" style="width:0%"></span>
         <span class="seg-bad" id="segBad" style="width:0%"></span>
@@ -349,16 +458,17 @@
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="pc-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="pc">다시 확인</button>
+            <button class="mini-btn" type="button" data-refresh="pc" title="매장 컴퓨터에 다시 물어봐요">다시 확인</button>
           </div>
         </div>
-        <div class="lbar card-lbar" id="barPc"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="lbar card-lbar" id="barPc" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">마지막 확인</div><div class="row-v"><strong class="c-mute" data-field="pc-seen">–</strong></div></div>
-          <div class="row"><div class="row-k">대기 상태</div><div class="row-v"><strong data-field="pc-mode">–</strong></div></div>
+          <div class="row" id="rowPcMode"><div class="row-k">대기 상태</div><div class="row-v"><strong data-field="pc-mode">–</strong></div></div>
           <div class="row"><div class="row-k">매출 가져오기</div><div class="row-v"><strong data-field="pc-sales">–</strong></div></div>
           <div class="row"><div class="row-k">그룹웨어 발주</div><div class="row-v"><strong data-field="pc-order">–</strong></div></div>
         </div>
+        <div class="card-foot" data-field="pc-basis">기준 –</div>
       </div>
 
       <!-- 2. 발주·라벨앱 -->
@@ -370,24 +480,24 @@
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="ll-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="ll">새로 확인</button>
+            <button class="mini-btn" type="button" data-refresh="ll" title="코드 저장소를 새로 확인해요">새로 확인</button>
           </div>
         </div>
-        <div class="lbar card-lbar" id="barLl"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="lbar card-lbar" id="barLl" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
-          <div class="row tap" id="rowPrs" data-toggle="listPrs" role="button" tabindex="0" aria-expanded="false">
+          <div class="row tap" id="rowPrs" data-toggle="listPrs" role="button" tabindex="0" aria-expanded="false" aria-controls="listPrs">
             <div class="row-k">승인 기다리는 수정</div>
             <div class="row-v"><strong data-field="ll-prs">–</strong><span class="chev">▼</span></div>
           </div>
           <div class="task-list" id="listPrs" hidden></div>
-          <div class="row tap" id="rowIssues" data-toggle="listIssues" role="button" tabindex="0" aria-expanded="false">
+          <div class="row tap" id="rowIssues" data-toggle="listIssues" role="button" tabindex="0" aria-expanded="false" aria-controls="listIssues">
             <div class="row-k">남은 개선 목록</div>
             <div class="row-v"><strong data-field="ll-issues">–</strong><span class="chev">▼</span></div>
           </div>
           <div class="task-list" id="listIssues" hidden></div>
           <div class="row"><div class="row-k">마지막 고친 때</div><div class="row-v"><strong data-field="ll-when">–</strong></div></div>
         </div>
-        <div class="card-foot">최근 저장 번호 <span data-field="ll-sha">–</span></div>
+        <div class="card-foot"><span data-field="ll-basis">기준 –</span> · 최근 저장 번호 <span data-field="ll-sha">–</span></div>
       </div>
 
       <!-- 3. 이 현황판 상태 -->
@@ -399,16 +509,16 @@
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="hub-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="hub">새로고침</button>
+            <button class="mini-btn" type="button" data-refresh="hub" title="이 현황판 코드를 다시 확인해요">새로고침</button>
           </div>
         </div>
-        <div class="lbar card-lbar" id="barHub"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="lbar card-lbar" id="barHub" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">화면 열림</div><div class="row-v"><strong class="c-ok" data-field="hub-open">정상</strong></div></div>
           <div class="row"><div class="row-k">업데이트</div><div class="row-v"><strong data-field="hub-updated">–</strong></div></div>
           <div class="row">
             <div class="row-line">
-              <div class="row-k">자동 새로고침</div>
+              <div class="row-k">자동 새로고침 (매장 컴퓨터)</div>
               <div class="row-sub" data-field="hub-auto-sub">곧 시작해요</div>
             </div>
             <div class="row-v"><strong data-field="hub-auto">30초마다</strong></div>
@@ -421,20 +531,21 @@
         <div class="card-top">
           <div class="card-head">
             <div class="card-title">함께 일하는 AI 4인</div>
-            <div class="card-sub">마지막으로 움직인 때</div>
+            <div class="card-sub">코드 기록 기준 · 누가 남긴 기록인지</div>
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="nodes-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="nodes">다시 확인</button>
+            <button class="mini-btn" type="button" data-refresh="nodes" title="코드 기록을 다시 확인해요">다시 확인</button>
           </div>
         </div>
-        <div class="lbar card-lbar" id="barNodes"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="lbar card-lbar" id="barNodes" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">피클 (모바일 비서)</div><div class="row-v"><strong class="c-mute" data-field="node-pickle">–</strong></div></div>
           <div class="row"><div class="row-k">클로드 (코드 작업)</div><div class="row-v"><strong data-field="node-claude">–</strong></div></div>
           <div class="row"><div class="row-k">어사이드 (집 PC)</div><div class="row-v"><strong data-field="node-aside">–</strong></div></div>
           <div class="row"><div class="row-k">그록봇 (자료 조사)</div><div class="row-v"><strong data-field="node-grok">–</strong></div></div>
         </div>
+        <div class="card-note">커밋과 PR 시각으로 본 값이에요. 저장소 계정이 하나라, 누가 한 일인지는 제목의 표시([그록 봇] 등)로만 나눠요. 피클은 이 화면에서 알 수 있는 기록이 없어요.</div>
       </div>
 
       <!-- 5. 지금 살펴볼 것 -->
@@ -446,10 +557,10 @@
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="prob-count">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="problems">다시 확인</button>
+            <button class="mini-btn" type="button" data-refresh="problems" title="전체를 다시 확인해요">다시 확인</button>
           </div>
         </div>
-        <div class="lbar card-lbar" id="barProblems"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="lbar card-lbar" id="barProblems" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows" id="probRows">
           <div class="empty">아직 확인하기 전이에요.</div>
         </div>
@@ -464,22 +575,23 @@
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="conn-status">확인 중</div>
-            <button class="mini-btn" type="button" data-refresh="signals">확인</button>
+            <button class="mini-btn" type="button" data-refresh="signals" title="연결을 다시 확인해요">확인</button>
           </div>
         </div>
-        <div class="lbar card-lbar" id="barSignals"><div class="lbar-in"><i></i><b></b></div></div>
+        <div class="lbar card-lbar" id="barSignals" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows">
           <div class="row"><div class="row-k">매장 컴퓨터 연결</div><div class="row-v"><strong data-field="conn-pc">–</strong></div></div>
           <div class="row"><div class="row-k">코드 저장소 연결</div><div class="row-v"><strong data-field="conn-code">–</strong></div></div>
-          <div class="row"><div class="row-k">다음 자동 확인</div><div class="row-v"><strong data-field="conn-next">–</strong></div></div>
+          <div class="row"><div class="row-k">다음 자동 확인 (코드 저장소)</div><div class="row-v"><strong data-field="conn-next">–</strong></div></div>
           <div class="row"><div class="row-k">확인 여유</div><div class="row-v"><strong data-field="conn-rate">–</strong></div></div>
         </div>
+        <div class="card-foot" data-field="conn-note">코드 저장소는 10분에 한 번 확인해요</div>
       </div>
 
     </div>
 
     <div class="foot">
-      매장 컴퓨터 연결 상태와 앱 수정 현황을 30초마다 자동으로 확인합니다.<br>
+      매장 컴퓨터는 30초마다, 코드 저장소는 10분에 한 번 자동으로 확인합니다.<br>
       개인정보나 매출 금액은 표시되지 않습니다.
     </div>
 
@@ -494,23 +606,37 @@
   var GH = "https://api.github.com";
   var LL = "MFGKOREA/label-list";
   var HUB = "MFGKOREA/desk-widgets";
-  var GH_TTL_MS = 300000;       // 코드 저장소는 5분에 한 번만 확인
-  var AUTO_SEC = 30;
+
+  var AUTO_SEC = 30;             // 매장 컴퓨터는 30초마다
+  var GH_TTL_MS = 600000;        // 코드 저장소는 10분에 한 번 (시간당 60회 한도 보호)
+  var ISSUE_TTL_MS = 600000;     // 목록은 펼칠 때 한 번
+  var SHEET_TIMEOUT_MS = 8000;   // 8초 넘게 대답이 없으면 실패로 본다
+  var GH_TIMEOUT_MS = 10000;
+  var RETRY_MS = 5000;           // 실패하면 다음 확인을 5초 뒤로 앞당긴다
+  var WATCHDOG_MS = 20000;       // 버튼·막대가 잠긴 채 남지 않게
   var MIN = 60000;
+  var CACHE_KEY = "aihub.status.v2";
 
   var S = {
-    sheet: { ok: false, at: null, data: null, err: null, stat: null },
-    ll:    { ok: false, at: null, err: null },
-    hub:   { ok: false, at: null, err: null },
+    sheet: { ok: false, at: null, data: null, err: null, stat: null, stale: false, timeout: false, lastOkAt: null },
+    ll:    { ok: false, at: null, err: null, errAt: null, stale: false, items: {} },
+    hub:   { ok: false, at: null, err: null, errAt: null, stale: false },
     ghRate: null,
+    ghReset: 0,
+    ghBlockedAt: 0,
     nextGhAt: 0,
-    lastSync: null
+    lastSync: null,
+    retryAt: 0,
+    fails: { sheet: 0, ll: 0, hub: 0 },
+    checks: null,
+    issAt: 0
   };
 
+  var inFlight = {};
   var etags = {};
-  var sec = AUTO_SEC;
+  var syncing = null;
+  var nextAutoAt = Date.now() + AUTO_SEC * 1000;
   var toastTimer = null;
-  var autoTimer = null;
   var demoRunning = false;
 
   function $(id) { return document.getElementById(id); }
@@ -519,7 +645,10 @@
 
   function hhmm(ts) {
     if (!ts) return "–";
-    var d = (ts instanceof Date) ? ts : new Date(ts);
+    var d;
+    if (ts instanceof Date) d = ts;
+    else if (typeof ts === "string" && isNaN(Number(ts))) d = new Date(ts);
+    else d = new Date(Number(ts));
     if (isNaN(d.getTime())) return "–";
     try {
       return new Intl.DateTimeFormat("ko-KR", {
@@ -544,6 +673,34 @@
     return d + "일 전";
   }
 
+  /* 서울 날짜 키 (YYYY-MM-DD) */
+  function dayKey(ts) {
+    if (ts === null || ts === undefined || ts === "") return null;
+    var d = (typeof ts === "string" && /^\d{4}-\d{2}-\d{2}$/.test(ts)) ? new Date(ts + "T00:00:00+09:00") : new Date(Number(ts));
+    if (isNaN(d.getTime())) return null;
+    try {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
+      }).format(d);
+    } catch (e) {
+      return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate());
+    }
+  }
+
+  /* 며칠 전 날짜인지 (오늘이면 0) */
+  function dayDiff(key) {
+    var a = key ? Date.parse(key + "T00:00:00Z") : NaN;
+    var b = Date.parse(dayKey(Date.now()) + "T00:00:00Z");
+    if (isNaN(a) || isNaN(b)) return null;
+    return Math.round((b - a) / 86400000);
+  }
+
+  function prettyDate(key) {
+    if (!key) return "–";
+    var p = String(key).split("-");
+    return p.length === 3 ? p[1] + "/" + p[2] : String(key);
+  }
+
   /* 상태 낱말 */
   function stateWord(s) {
     var v = String(s || "").toLowerCase();
@@ -554,20 +711,21 @@
     return "알 수 없음";
   }
 
-  function stateClass(word) {
-    if (word === "완료") return "c-ok";
-    if (word === "진행 중") return "c-warn";
-    if (word === "실패") return "c-bad";
-    return "c-mute";
-  }
-
-  /* 컴퓨터가 어떻게 기다리는지 */
+  /* 컴퓨터가 어떻게 기다리는지 — 뜻을 아는 값만 보여준다 */
   function waitWord(mode) {
     var v = String(mode || "").toLowerCase();
-    if (!v) return "정보 없음";
-    if (v === "ondemand" || v === "on-demand" || v === "on_demand") return "필요할 때 바로 실행";
+    if (!v) return null;
     if (v === "always" || v === "auto" || v === "watch" || v === "resident") return "항상 켜둠";
-    return "자동으로 실행";
+    return null;
+  }
+
+  function errWord(e) {
+    var s = String(e || "");
+    if (s === "timeout") return "대답이 늦어요";
+    if (/한도|RateError/.test(s)) return "한도 소진";
+    if (/HTTP 40[13]|HTTP 429/.test(s)) return "한도 소진";
+    if (/형식/.test(s)) return "응답 형식이 달라요";
+    return "잠시 문제가 있어요";
   }
 
   function clampLevel(l) { return (l === "ok" || l === "warn" || l === "bad") ? l : "warn"; }
@@ -579,19 +737,22 @@
     if (cls !== undefined) el.className = cls || "";
   }
 
-  function setText(id, text) {
-    var el = $(id);
-    if (el) el.textContent = text;
+  function setFieldTip(name, text, cls, tip) {
+    var el = qs('[data-field="' + name + '"]');
+    if (!el) return;
+    el.textContent = text;
+    if (cls !== undefined) el.className = cls || "";
+    if (tip) el.setAttribute("title", tip); else el.removeAttribute("title");
   }
 
-  function showToast(msg, kind, quiet) {
-    var b = $("statusBanner");
-    if (b) {
-      b.className = "status-banner show" + (kind ? " " + kind : "");
-      setText("bannerTxt", msg);
-      setText("bannerTime", hhmm(Date.now()));
-    }
-    if (quiet) return;
+  function setText(id, text) { var el = $(id); if (el) el.textContent = text; }
+
+  function setBtnTip(kind, tip) {
+    var b = document.querySelector('[data-refresh="' + kind + '"]');
+    if (b) b.setAttribute("title", tip);
+  }
+
+  function showToast(msg) {
     var t = $("toast");
     if (!t) return;
     t.textContent = msg;
@@ -613,6 +774,84 @@
     if (level) el.classList.add("tint-" + level);
   }
 
+  /* ---------------- 한 번만 부르기 (중복 요청 막기) ---------------- */
+
+  function once(key, fn) {
+    if (inFlight[key]) return inFlight[key];
+    var p;
+    try { p = Promise.resolve(fn()); } catch (e) { p = Promise.reject(e); }
+    inFlight[key] = p;
+    function clear() { if (inFlight[key] === p) delete inFlight[key]; }
+    p.then(clear, clear);
+    return p;
+  }
+
+  /* 8초 넘으면 그만 기다린다 */
+  function timedFetch(url, opts, ms) {
+    var ctl = null;
+    if (typeof AbortController !== "undefined") { try { ctl = new AbortController(); } catch (e) { ctl = null; } }
+    var o = {};
+    if (opts) { for (var k in opts) { if (Object.prototype.hasOwnProperty.call(opts, k)) o[k] = opts[k]; } }
+    if (ctl) o.signal = ctl.signal;
+    var timer = null;
+    var timeout = new Promise(function (resolve, reject) {
+      timer = setTimeout(function () {
+        if (ctl) { try { ctl.abort(); } catch (e) {} }
+        var err = new Error("timeout");
+        err.name = "TimeoutError";
+        reject(err);
+      }, ms || SHEET_TIMEOUT_MS);
+    });
+    return Promise.race([
+      fetch(url, o).then(function (r) { clearTimeout(timer); return r; },
+        function (e) { clearTimeout(timer); throw e; }),
+      timeout
+    ]);
+  }
+
+  /* ---------------- 지난 값 남겨 두기 ---------------- */
+
+  function saveCache() {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        v: 2,
+        savedAt: Date.now(),
+        sheet: { stat: S.sheet.stat || null, at: S.sheet.at || null, ver: (S.sheet.data && S.sheet.data.ver) || null },
+        ll: {
+          at: S.ll.at || null, prs: S.ll.prs, issues: S.ll.issues, items: S.ll.items,
+          sha: S.ll.sha || null, commitAt: S.ll.commitAt || null, pushedAt: S.ll.pushedAt || null,
+          pullUpdatedAt: S.ll.pullUpdatedAt || null, grokAt: S.ll.grokAt || null, asideAt: S.ll.asideAt || null
+        },
+        hub: { at: S.hub.at || null, sha: S.hub.sha || null, commitAt: S.hub.commitAt || null, pushedAt: S.hub.pushedAt || null }
+      }));
+    } catch (e) {}
+  }
+
+  function restoreCache() {
+    var c = null;
+    try { var raw = localStorage.getItem(CACHE_KEY); if (raw) c = JSON.parse(raw); } catch (e) { c = null; }
+    if (!c || c.v !== 2) return;
+    if (Date.now() - Number(c.savedAt || 0) > 86400000) return;   // 하루 넘은 값은 쓰지 않는다
+    if (c.sheet && c.sheet.stat) {
+      S.sheet.stat = c.sheet.stat;
+      S.sheet.data = { status: c.sheet.stat, ver: c.sheet.ver || null };
+      S.sheet.at = c.sheet.at || null;
+      S.sheet.stale = true;
+    }
+    if (c.ll && c.ll.at) {
+      S.ll = {
+        ok: true, at: c.ll.at, err: null, errAt: null, stale: true,
+        prs: c.ll.prs, issues: c.ll.issues, items: c.ll.items || {},
+        sha: c.ll.sha, commitAt: c.ll.commitAt, pushedAt: c.ll.pushedAt,
+        pullUpdatedAt: c.ll.pullUpdatedAt, grokAt: c.ll.grokAt, asideAt: c.ll.asideAt
+      };
+    }
+    if (c.hub && c.hub.at) {
+      S.hub = { ok: true, at: c.hub.at, err: null, errAt: null, stale: true,
+                sha: c.hub.sha, commitAt: c.hub.commitAt, pushedAt: c.hub.pushedAt };
+    }
+  }
+
   /* ---------------- 자료 가져오기 ---------------- */
 
   function RateError(msg) { var e = new Error(msg); e.name = "RateError"; return e; }
@@ -621,14 +860,21 @@
     var c = etags[url];
     var headers = { "Accept": "application/vnd.github+json" };
     if (c && c.etag && !force) headers["If-None-Match"] = c.etag;
-    return fetch(url, { headers: headers, cache: "no-store" }).then(function (r) {
+    return timedFetch(url, { headers: headers, cache: "no-store" }, GH_TIMEOUT_MS).then(function (r) {
       var rem = r.headers.get("x-ratelimit-remaining");
+      var rst = r.headers.get("x-ratelimit-reset");
       if (rem !== null && rem !== undefined && rem !== "") S.ghRate = Number(rem);
+      if (rst !== null && rst !== undefined && rst !== "") S.ghReset = Number(rst) * 1000;
       if (r.status === 304) {
         if (c && c.data !== undefined) return c.data;
         throw new Error("304");
       }
-      if (r.status === 403 || r.status === 429) throw RateError("한도");
+      if (r.status === 403 || r.status === 429) {
+        if (!S.ghReset) S.ghReset = Date.now() + 10 * MIN;
+        S.ghBlockedAt = Math.max(S.ghBlockedAt, S.ghReset);
+        S.nextGhAt = Math.max(S.nextGhAt, S.ghBlockedAt);
+        throw RateError("한도");
+      }
       if (!r.ok) throw new Error("HTTP " + r.status);
       var tag = r.headers.get("etag");
       return r.json().then(function (data) {
@@ -639,21 +885,38 @@
   }
 
   function loadSheet() {
-    return fetch(SHEET + "&t=" + Date.now(), { cache: "no-store" }).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    }).then(function (j) {
-      if (!j || !j.status) throw new Error("형식");
-      S.sheet.ok = true;
-      S.sheet.err = null;
-      S.sheet.data = j;
-      S.sheet.stat = j.status;
-      S.sheet.at = Date.now();
-      return j;
-    }).catch(function (e) {
-      S.sheet.ok = false;
-      S.sheet.err = String(e && e.message ? e.message : e);
-      throw e;
+    return once("sheet", function () {
+      return timedFetch(SHEET + "&t=" + Date.now(), { cache: "no-store" }, SHEET_TIMEOUT_MS)
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (j) {
+          if (!j || !j.status) throw new Error("형식");
+          S.sheet.ok = true;
+          S.sheet.err = null;
+          S.sheet.timeout = false;
+          S.sheet.stale = false;
+          S.sheet.data = j;
+          S.sheet.stat = j.status;
+          S.sheet.at = Date.now();
+          S.sheet.lastOkAt = Date.now();
+          S.fails.sheet = 0;
+          S.retryAt = 0;
+          saveCache();
+          return j;
+        })
+        .catch(function (e) {
+          var t = !!(e && (e.name === "TimeoutError" || e.name === "AbortError" || e.message === "timeout"));
+          S.sheet.ok = false;
+          S.sheet.timeout = t;
+          S.sheet.err = t ? "timeout" : String(e && e.message ? e.message : e);
+          if (S.sheet.stat) S.sheet.stale = true;      // 지난 값은 지우지 않는다
+          S.fails.sheet++;
+          /* 한두 번 실패는 앞당겨 다시 보고, 계속 안 되면 평소 주기로 돌아간다 */
+          S.retryAt = S.fails.sheet <= 2 ? Date.now() + RETRY_MS * S.fails.sheet : 0;
+          throw e;
+        });
     });
   }
 
@@ -666,184 +929,353 @@
     };
   }
 
-  function loadLabelList(force) {
-    return Promise.all([
-      ghJSON(GH + "/repos/" + LL, force),
-      ghJSON(GH + "/repos/" + LL + "/pulls?state=open&per_page=100&sort=updated&direction=desc", force),
-      ghJSON(GH + "/repos/" + LL + "/commits?sha=main&per_page=1", force),
-      ghJSON(GH + "/repos/" + LL + "/issues?state=open&per_page=100&sort=updated&direction=desc", force)
-        .catch(function () { return null; })
-    ]).then(function (res) {
-      var repo = res[0] || {};
-      var pulls = Array.isArray(res[1]) ? res[1] : [];
-      var commits = Array.isArray(res[2]) ? res[2] : [];
-      var rawIssues = Array.isArray(res[3]) ? res[3] : null;
-      var latestPull = null;
-      for (var i = 0; i < pulls.length; i++) {
-        if (!latestPull || new Date(pulls[i].updated_at) > new Date(latestPull.updated_at)) latestPull = pulls[i];
-      }
-      var c0 = commits[0] || null;
-      var prs = pulls.length;
-      var openAll = Number(repo.open_issues_count || 0);
-      /* 열린 이슈 목록: 저장소가 같이 돌려주는 PR 항목은 빼고 진짜 이슈만 */
-      var issuesOnly = [];
-      if (rawIssues) {
-        for (var k = 0; k < rawIssues.length; k++) {
-          if (rawIssues[k] && !rawIssues[k].pull_request) issuesOnly.push(rawIssues[k]);
-        }
-      }
-      /* 무슨 일인지 볼 수 있게 제목·번호·주소 보관 (공개 저장소) */
-      var prItems = [];
-      for (var a = 0; a < pulls.length; a++) prItems.push(taskOf(pulls[a]));
-      var issItems = [];
-      for (var b = 0; b < issuesOnly.length; b++) issItems.push(taskOf(issuesOnly[b]));
+  /* 그록봇이 남긴 기록인지 (제목 표시·계정 이름으로만 구분) */
+  function isGrok(x) {
+    var title = String((x && x.title) || "");
+    var login = String((x && x.user && x.user.login) || "");
+    return /그록\s*봇|grok/i.test(title) || /grok|bot/i.test(login);
+  }
 
-      S.ll = {
-        ok: true,
-        at: Date.now(),
-        err: null,
-        prs: prs,
-        issues: rawIssues ? issuesOnly.length : Math.max(0, openAll - prs),
-        items: { prs: prItems, issues: issItems },
-        sha: c0 ? String(c0.sha || "").slice(0, 7) : null,
-        commitAt: c0 ? (c0.commit && c0.commit.committer && c0.commit.committer.date) || null : null,
-        pushedAt: repo.pushed_at || null,
-        pullUpdatedAt: latestPull ? latestPull.updated_at : null
-      };
-      return S.ll;
-    }).catch(function (e) {
-      var msg = String(e && e.message ? e.message : e);
-      if (!S.ll.at) S.ll = { ok: false, at: Date.now(), err: msg };
-      else { S.ll.ok = false; S.ll.err = msg; }
-      throw e;
+  function timeOf(x) {
+    var t = x && (x.updated_at || x.created_at);
+    var v = t ? new Date(t).getTime() : NaN;
+    return isNaN(v) ? 0 : v;
+  }
+
+  function loadLabelList(force) {
+    return once("ll", function () {
+      return Promise.all([
+        ghJSON(GH + "/repos/" + LL, force),
+        ghJSON(GH + "/repos/" + LL + "/pulls?state=open&per_page=100&sort=updated&direction=desc", force),
+        ghJSON(GH + "/repos/" + LL + "/commits?sha=main&per_page=1", force)
+      ]).then(function (res) {
+        var repo = res[0] || {};
+        var pulls = Array.isArray(res[1]) ? res[1] : [];
+        var commits = Array.isArray(res[2]) ? res[2] : [];
+        var latestPull = null, grokAt = 0, asideAt = 0;
+        for (var i = 0; i < pulls.length; i++) {
+          var t = timeOf(pulls[i]);
+          if (!latestPull || new Date(pulls[i].updated_at) > new Date(latestPull.updated_at)) latestPull = pulls[i];
+          if (isGrok(pulls[i])) { if (t > grokAt) grokAt = t; }
+          else if (t > asideAt) { asideAt = t; }
+        }
+        var c0 = commits[0] || null;
+        var prs = pulls.length;
+        var openAll = Number(repo.open_issues_count || 0);
+        var prItems = [];
+        for (var a = 0; a < pulls.length; a++) prItems.push(taskOf(pulls[a]));
+
+        S.ll = {
+          ok: true,
+          at: Date.now(),
+          err: null,
+          errAt: null,
+          stale: false,
+          prs: prs,
+          issues: (S.ll.issuesExact !== null && S.ll.issuesExact !== undefined) ? S.ll.issuesExact : Math.max(0, openAll - prs),
+          issuesExact: (S.ll.issuesExact !== null && S.ll.issuesExact !== undefined) ? S.ll.issuesExact : null,
+          items: { prs: prItems, issues: (S.ll.items && Array.isArray(S.ll.items.issues)) ? S.ll.items.issues : [] },
+          sha: c0 ? String(c0.sha || "").slice(0, 7) : null,
+          commitAt: c0 ? (c0.commit && c0.commit.committer && c0.commit.committer.date) || null : null,
+          pushedAt: repo.pushed_at || null,
+          pullUpdatedAt: latestPull ? latestPull.updated_at : null,
+          grokAt: grokAt ? new Date(grokAt).toISOString() : null,
+          asideAt: asideAt ? new Date(asideAt).toISOString() : null
+        };
+        S.fails.ll = 0;
+        saveCache();
+        return S.ll;
+      }).catch(function (e) {
+        var msg = String(e && e.message ? e.message : e);
+        if (S.ll.at) {                       // 있던 값은 그대로 두고 표시만 바꾼다
+          S.ll.ok = true;
+          S.ll.stale = true;
+          S.ll.err = msg;
+          S.ll.errAt = Date.now();
+        } else {
+          S.ll = { ok: false, at: Date.now(), err: msg, errAt: Date.now(), stale: false, items: {} };
+        }
+        S.fails.ll++;
+        throw e;
+      });
+    });
+  }
+
+  /* 남은 개선 목록은 펼칠 때 한 번만 받는다 */
+  function loadIssues(force) {
+    if (!force && S.ll.items && Array.isArray(S.ll.items.issues) && S.ll.items.issues.length && Date.now() - S.issAt < ISSUE_TTL_MS) {
+      return Promise.resolve(S.ll.items.issues);
+    }
+    return once("iss", function () {
+      return ghJSON(GH + "/repos/" + LL + "/issues?state=open&per_page=100&sort=updated&direction=desc", force)
+        .then(function (raw) {
+          var list = Array.isArray(raw) ? raw : [];
+          var only = [];
+          for (var k = 0; k < list.length; k++) {
+            if (list[k] && !list[k].pull_request) only.push(list[k]);
+          }
+          var items = [];
+          for (var b = 0; b < only.length; b++) items.push(taskOf(only[b]));
+          S.ll.items = S.ll.items || {};
+          S.ll.items.issues = items;
+          S.ll.issuesExact = only.length;
+          S.ll.issues = only.length;
+          S.ll.issuesAt = Date.now();
+          S.issAt = Date.now();
+          saveCache();
+          return items;
+        });
     });
   }
 
   function loadHub(force) {
-    return Promise.all([
-      ghJSON(GH + "/repos/" + HUB, force).catch(function () { return null; }),
-      ghJSON(GH + "/repos/" + HUB + "/commits?path=ai-hub/index.html&per_page=1", force).catch(function () { return null; })
-    ]).then(function (res) {
-      var repo = res[0] || {};
-      var commits = Array.isArray(res[1]) ? res[1] : [];
-      var c0 = commits[0] || null;
-      S.hub = {
-        ok: !!c0,
-        at: Date.now(),
-        err: c0 ? null : "응답 없음",
-        sha: c0 ? String(c0.sha || "").slice(0, 7) : null,
-        commitAt: c0 ? (c0.commit && c0.commit.committer && c0.commit.committer.date) || null : null,
-        pushedAt: repo.pushed_at || null
-      };
-      return S.hub;
-    }).catch(function (e) {
-      S.hub = { ok: false, at: Date.now(), err: String(e && e.message ? e.message : e) };
-      throw e;
+    return once("hub", function () {
+      return Promise.all([
+        ghJSON(GH + "/repos/" + HUB, force),
+        ghJSON(GH + "/repos/" + HUB + "/commits?path=ai-hub/index.html&per_page=1", force)
+      ]).then(function (res) {
+        var repo = res[0] || {};
+        var commits = Array.isArray(res[1]) ? res[1] : [];
+        var c0 = commits[0] || null;
+        if (!c0) throw new Error("응답 없음");
+        S.hub = {
+          ok: true, at: Date.now(), err: null, errAt: null, stale: false,
+          sha: String(c0.sha || "").slice(0, 7),
+          commitAt: (c0.commit && c0.commit.committer && c0.commit.committer.date) || null,
+          pushedAt: repo.pushed_at || null
+        };
+        S.fails.hub = 0;
+        saveCache();
+        return S.hub;
+      }).catch(function (e) {
+        var msg = String(e && e.message ? e.message : e);
+        if (S.hub.at) { S.hub.ok = true; S.hub.stale = true; S.hub.err = msg; S.hub.errAt = Date.now(); }
+        else { S.hub = { ok: false, at: Date.now(), err: msg, errAt: Date.now(), stale: false }; }
+        S.fails.hub++;
+        throw e;
+      });
     });
   }
 
-  /* ---------------- 점검 9가지 ---------------- */
+  /* ---------------- 카드별 판정 (점검과 화면이 같은 함수를 쓴다) ---------------- */
+
+  function judgePc() {
+    var now = Date.now();
+    var ma = (S.sheet.stat || {}).misAgent || {};
+    if (S.sheet.ok && ma.at) {
+      var age = (now - Number(ma.at)) / MIN;
+      if (age <= 30) return { level: "ok", word: "켜져 있음", age: age };
+      if (age <= 60) return { level: "warn", word: "조용해요", age: age };
+      return { level: "bad", word: "꺼진 것 같아요", age: age };
+    }
+    if (S.sheet.timeout) return { level: "bad", word: "대답이 늦어요", age: null };
+    if (S.sheet.ok) return { level: "bad", word: "소식 없음", age: null };
+    if (S.sheet.stale) return { level: "warn", word: "지난 값", age: null };
+    return { level: "bad", word: "확인 안 됨", age: null };
+  }
+
+  function judgeSales() {
+    var sp = (S.sheet.stat || {}).salesPush || {};
+    if (!sp.status) return { level: "mute", text: "정보 없음", why: "기록이 없어요" };
+    var w = stateWord(sp.status);
+    var age = sp.at ? (Date.now() - Number(sp.at)) / MIN : 0;
+    var doneDay = dayDiff(dayKey(sp.doneAt));
+    var r;
+    if (w === "완료") {
+      if (doneDay === null || doneDay === 0) r = { level: "ok", text: "완료 · " + hhmm(sp.doneAt), why: "오늘 가져왔어요" };
+      else if (doneDay === 1) r = { level: "warn", text: "어제 완료 · " + hhmm(sp.doneAt), why: "마지막 " + hhmm(sp.doneAt) + " · 오늘 것은 아직이에요" };
+      else r = { level: "bad", text: doneDay + "일 전 완료", why: "오늘 것은 아직 없어요" };
+    } else if (w === "진행 중") {
+      var howLong = age < 60 ? Math.round(age) + "분째" : Math.round(age / 60) + "시간째";
+      r = { level: age > 30 ? "bad" : "warn", text: "진행 중 · " + howLong, why: howLong + " 하는 중이에요" };
+    } else if (w === "알 수 없음") {
+      r = { level: "warn", text: "알 수 없음", why: "위 '다시 확인'을 눌러 주세요" };
+    } else {
+      r = { level: "bad", text: "실패", why: "위 '다시 확인'을 눌러 다시 해 보세요" };
+    }
+    return staleJudge(r);
+  }
+
+  /* 지금 새 값을 못 받았으면 '지난 값'이라고 밝힌다 */
+  function staleJudge(r) {
+    if (!S.sheet.stale) return r;
+    if (r.level === "ok") r.level = "warn";
+    r.why = "지난 값 기준 · " + r.why;
+    return r;
+  }
+
+  function judgeOrder() {
+    var mp = (S.sheet.stat || {}).misPush || {};
+    if (!mp.status) return { level: "mute", text: "정보 없음", why: "넘긴 기록이 없어요" };
+    var w = stateWord(mp.status);
+    var d = dayDiff(mp.date);
+    var r;
+    if (w === "완료") {
+      if (d === null || d === 0) r = { level: "ok", text: "완료 · 오늘", why: "오늘 넘겼어요" };
+      else if (d === 1) r = { level: "warn", text: "어제 완료 · " + prettyDate(mp.date), why: "작업일 " + prettyDate(mp.date) + " · 오늘 것은 아직이에요" };
+      else r = { level: "bad", text: "오래됨 · " + prettyDate(mp.date), why: "작업일 " + prettyDate(mp.date) + " · " + d + "일 지났어요" };
+    } else if (w === "진행 중") {
+      var age = mp.at ? (Date.now() - Number(mp.at)) / MIN : 0;
+      var howLong2 = age < 60 ? Math.round(age) + "분째" : Math.round(age / 60) + "시간째";
+      r = { level: age > 30 ? "bad" : "warn", text: "진행 중 · " + howLong2, why: howLong2 + " 하는 중이에요" };
+    } else if (w === "알 수 없음") {
+      r = { level: "warn", text: "알 수 없음", why: "위 '다시 확인'을 눌러 주세요" };
+    } else {
+      r = { level: "bad", text: "실패", why: "위 '다시 확인'을 눌러 다시 넘겨 보세요" };
+    }
+    return staleJudge(r);
+  }
+
+  /* ---------------- 점검 8가지 (매장 6 + 이 화면 2) ---------------- */
 
   function buildChecks() {
     var now = Date.now();
     var out = [];
-    function add(level, label, detail, act) {
-      out.push({ level: clampLevel(level), label: label, detail: detail || "", act: act || null });
+    function add(level, label, detail, opt) {
+      opt = opt || {};
+      out.push({
+        level: clampLevel(level), label: label, detail: detail || "",
+        act: opt.act || null, retry: opt.retry || null, self: !!opt.self
+      });
     }
 
-    var st = S.sheet.stat || {};
-    var ma = st.misAgent || {};
-    var sp = st.salesPush || {};
-    var mp = st.misPush || {};
-
-    /* 1. 매장 컴퓨터 */
-    if (S.sheet.ok && ma.at) {
-      var age = (now - Number(ma.at)) / MIN;
-      if (age <= 20) add("ok", "매장 컴퓨터 켜짐", "마지막 확인 " + ago(age));
-      else if (age <= 60) add("warn", "매장 컴퓨터가 조용해요", "마지막 확인 " + ago(age));
-      else add("bad", "매장 컴퓨터가 꺼진 것 같아요", "마지막 확인 " + ago(age));
+    /* 1. 매장 컴퓨터 (자료를 못 받은 경우도 여기서 한 번만 센다) */
+    var pj = judgePc();
+    if (S.sheet.ok && pj.age !== null && pj.age !== undefined) {
+      var age = pj.age;
+      if (pj.level === "ok") add("ok", "매장 컴퓨터 켜짐", "마지막 확인 " + ago(age), { retry: "pc" });
+      else if (pj.level === "warn") add("warn", "매장 컴퓨터가 조용해요", "마지막 확인 " + ago(age) + " · 하트비트는 10분쯤마다 와요", { retry: "pc" });
+      else add("bad", "매장 컴퓨터가 꺼진 것 같아요", "마지막 확인 " + ago(age), { retry: "pc" });
+    } else if (S.sheet.timeout) {
+      add("bad", "매장 컴퓨터 대답이 늦어요", "8초 동안 대답이 없었어요" + (S.sheet.stale ? " · 지난 값 표시 중" : ""), { retry: "pc" });
     } else if (S.sheet.ok) {
-      add("bad", "매장 컴퓨터가 꺼진 것 같아요", "오늘은 아직 소식이 없어요");
+      add("bad", "매장 컴퓨터가 꺼진 것 같아요", "아직 오늘 소식이 없어요", { retry: "pc" });
+    } else if (S.sheet.stale) {
+      add("bad", "현황판 자료를 못 받았어요", "지난 값만 보여드려요 · 매장 컴퓨터 상태도 함께 못 봤어요", { retry: "pc" });
     } else {
-      add("bad", "현황판 자료를 못 받았어요", "잠시 뒤 다시 확인할게요");
+      add("bad", "현황판 자료를 못 받았어요", "매장 컴퓨터 상태도 함께 못 봤어요", { retry: "pc" });
     }
 
     /* 2. 매출 가져오기 */
-    if (S.sheet.ok && sp.status) {
-      var spw = stateWord(sp.status);
-      var spAge = sp.at ? (now - Number(sp.at)) / MIN : 0;
-      if (spw === "완료") add("ok", "매출 가져오기 완료", "잘 가져왔어요");
-      else if (spw === "진행 중") add(spAge > 30 ? "bad" : "warn", "매출 가져오는 중", Math.round(spAge) + "분째 하는 중이에요");
-      else add("bad", "매출 가져오기가 안 됐어요", "다시 눌러 주세요");
-    } else {
-      add("warn", "매출 가져오기 기록이 없어요", "오늘은 아직 요청이 없어요");
-    }
+    var sj = judgeSales();
+    if (sj.level === "mute") add("warn", "매출 가져오기 기록이 없어요", "오늘은 아직 요청이 없어요", { retry: "pc" });
+    else if (sj.level === "ok") add("ok", "매출 가져오기 완료", sj.why, { retry: "pc" });
+    else if (sj.level === "warn") add("warn", "매출 가져오기를 다시 볼 때예요", sj.why, { retry: "pc" });
+    else add("bad", "매출 가져오기가 안 됐어요", sj.why, { retry: "pc" });
 
     /* 3. 그룹웨어 발주 */
-    if (S.sheet.ok && mp.status) {
-      var mpw = stateWord(mp.status);
-      if (mpw === "완료") add("ok", "그룹웨어 발주 완료", mp.date ? "작업일 " + mp.date : "잘 넘겼어요");
-      else if (mpw === "진행 중") add("warn", "그룹웨어 발주하는 중", "조금만 기다려 주세요");
-      else add("bad", "그룹웨어 발주가 안 됐어요", "다시 넘겨 주세요");
-    } else {
-      add("warn", "그룹웨어 발주 기록이 없어요", "아직 넘긴 것이 없어요");
-    }
+    var oj = judgeOrder();
+    if (oj.level === "mute") add("warn", "그룹웨어 발주 기록이 없어요", "아직 넘긴 것이 없어요", { retry: "pc" });
+    else if (oj.level === "ok") add("ok", "그룹웨어 발주 완료", oj.why, { retry: "pc" });
+    else if (oj.level === "warn") add("warn", "그룹웨어 발주를 다시 볼 때예요", oj.why, { retry: "pc" });
+    else add("bad", "그룹웨어 발주가 안 됐어요", oj.why, { retry: "pc" });
 
     /* 4. 승인 기다리는 수정 */
-    if (S.ll.ok) {
+    if (S.ll.at) {
       var prs = Number(S.ll.prs || 0);
-      if (prs === 0) add("ok", "발주앱 수정 모두 반영됨", "기다리는 수정이 없어요");
-      else add("warn", "발주앱 수정 승인 대기 " + prs + "건", "승인만 하면 바로 반영돼요", "prs");
+      var prsBase = prs === 0 ? "기다리는 수정이 없어요" : "승인만 하면 바로 반영돼요";
+      if (S.ll.stale) add("warn", "발주앱 수정 상태가 지난 값이에요", prsBase + " · 기준 " + hhmm(S.ll.at), { act: "prs", retry: "ll" });
+      else if (prs === 0) add("ok", "발주앱 수정 모두 반영됨", prsBase, { act: "prs" });
+      else add("warn", "발주앱 수정 승인 대기 " + prs + "건", prsBase, { act: "prs" });
     } else {
-      add("bad", "발주앱 수정 상태를 못 봤어요", "잠시 뒤 다시 확인할게요");
+      add("bad", "발주앱 수정 상태를 못 봤어요", "잠시 뒤 다시 확인할게요", { retry: "ll" });
     }
 
     /* 5. 남은 개선 목록 */
-    if (S.ll.ok) {
+    if (S.ll.at) {
       var iss = Number(S.ll.issues || 0);
-      if (iss === 0) add("ok", "발주앱 할 일 정리됨", "남은 게 없어요");
-      else if (iss < 10) add("warn", "발주앱 남은 할 일 " + iss + "건", "고칠 일이 " + iss + "건 쌓여 있어요", "issues");
-      else add("bad", "발주앱 남은 할 일 " + iss + "건", "많이 쌓였어요. 하나씩 줄여요", "issues");
+      var issD = iss === 0 ? "남은 게 없어요" : "고칠 일이 " + iss + "건 쌓여 있어요";
+      if (S.ll.stale) add("warn", "발주앱 할 일 상태가 지난 값이에요", issD + " · 기준 " + hhmm(S.ll.at), { act: "issues", retry: "ll" });
+      else if (iss === 0) add("ok", "발주앱 할 일 정리됨", issD, { act: "issues" });
+      else if (iss < 10) add("warn", "발주앱 남은 할 일 " + iss + "건", issD, { act: "issues" });
+      else add("bad", "발주앱 남은 할 일 " + iss + "건", "많이 쌓였어요. 하나씩 줄여요", { act: "issues" });
     } else {
-      add("bad", "발주앱 할 일을 못 봤어요", "잠시 뒤 다시 확인할게요");
+      add("bad", "발주앱 할 일을 못 봤어요", "잠시 뒤 다시 확인할게요", { retry: "ll" });
     }
 
     /* 6. 발주앱 마지막 수정 */
-    if (S.ll.ok && S.ll.commitAt) {
-      var cAge = (now - new Date(S.ll.commitAt).getTime()) / MIN;
-      add(cAge <= 1440 ? "ok" : (cAge <= 4320 ? "warn" : "bad"), "발주앱 마지막 수정 " + ago(cAge), "최근에 고친 기록이 있어요");
-    } else if (S.ll.ok) {
-      add("warn", "발주앱 수정 기록이 없어요", "고친 기록을 못 찾았어요");
+    var llAt = S.ll.commitAt ? new Date(S.ll.commitAt).getTime() : 0;
+    if (S.ll.at && llAt) {
+      var cAge = (now - llAt) / MIN;
+      var cl = cAge <= 1440 ? "ok" : (cAge <= 4320 ? "warn" : "bad");
+      var lab = cAge <= 1440 ? "발주앱 마지막 수정 " + ago(cAge) : "발주앱을 " + ago(cAge) + " 고쳤어요";
+      if (S.ll.stale) add("warn", lab, "지난 값 · 기준 " + hhmm(S.ll.at), { retry: "ll" });
+      else add(cl, lab, "최근에 고친 기록이 있어요", { retry: "ll" });
+    } else if (S.ll.at) {
+      add("warn", "발주앱 수정 기록이 없어요", "고친 기록을 못 찾았어요", { retry: "ll" });
     } else {
-      add("bad", "발주앱 수정 기록을 못 봤어요", "잠시 뒤 다시 확인할게요");
+      add("bad", "발주앱 수정 기록을 못 봤어요", "잠시 뒤 다시 확인할게요", { retry: "ll" });
     }
 
-    /* 7. 이 현황판 마지막 수정 */
-    if (S.hub.ok && S.hub.commitAt) {
-      var hAge = (now - new Date(S.hub.commitAt).getTime()) / MIN;
-      add("ok", "이 현황판 마지막 수정 " + ago(hAge), "새 화면이 잘 올라가 있어요");
-    } else if (S.hub.ok) {
-      add("warn", "이 현황판 수정 기록이 없어요", "올린 기록을 못 찾았어요");
+    /* 7. 이 현황판 마지막 수정 (이 화면 자신) */
+    var hAt = S.hub.commitAt ? new Date(S.hub.commitAt).getTime() : 0;
+    if (S.hub.at && hAt) {
+      if (S.hub.stale) add("warn", "현황판 수정 기록이 지난 값이에요", "기준 " + hhmm(S.hub.at), { self: true, retry: "hub" });
+      else add("ok", "이 현황판 마지막 수정 " + ago((now - hAt) / MIN), "새 화면이 잘 올라가 있어요", { self: true, retry: "hub" });
+    } else if (S.hub.at) {
+      add("warn", "이 현황판 수정 기록이 없어요", "올린 기록을 못 찾았어요", { self: true, retry: "hub" });
     } else {
-      add("bad", "이 현황판 기록을 못 봤어요", "잠시 뒤 다시 확인할게요");
+      add("bad", "이 현황판 기록을 못 봤어요", "잠시 뒤 다시 확인할게요", { self: true, retry: "hub" });
     }
 
-    /* 8. 현황판 자료 */
-    if (S.sheet.ok) add("ok", "현황판 자료 잘 받음", "매장 컴퓨터에 물어봤어요");
-    else add("bad", "현황판 자료를 못 받았어요", "인터넷을 확인해 주세요");
-
-    /* 9. 코드 저장소 확인 여유 */
-    if (S.ghRate === null) {
-      add("warn", "코드 저장소 확인 여유를 모르겠어요", "아직 대답이 없어요");
+    /* 8. 코드 저장소 확인 여유 (이 화면 자신) */
+    if (S.ghBlockedAt && now < S.ghBlockedAt) {
+      add("bad", "코드 저장소 한도가 다 됐어요", Math.max(1, Math.ceil((S.ghBlockedAt - now) / MIN)) + "분 뒤에 다시 확인해요 · 지난 값 표시 중", { self: true, retry: "ll" });
+    } else if (S.ghRate === null) {
+      add("warn", "코드 저장소 확인 여유를 모르겠어요", "아직 대답이 없어요", { self: true, retry: "ll" });
     } else if (S.ghRate <= 5) {
-      add("bad", "코드 저장소 확인이 곧 막혀요", "시간당 60번 중 " + S.ghRate + "번 남음");
+      add("bad", "코드 저장소 확인이 곧 막혀요", "시간당 60번 중 " + S.ghRate + "번 남음 · 잠시 쉬어 갈게요", { self: true });
     } else if (S.ghRate <= 15) {
-      add("warn", "코드 저장소 확인 여유가 적어요", "시간당 60번 중 " + S.ghRate + "번 남음");
+      add("warn", "코드 저장소 확인 여유가 적어요", "시간당 60번 중 " + S.ghRate + "번 남음", { self: true });
     } else {
-      add("ok", "코드 저장소 확인 여유 넉넉함", "시간당 60번 중 " + S.ghRate + "번 남음");
+      add("ok", "코드 저장소 확인 여유 넉넉함", "시간당 60번 중 " + S.ghRate + "번 남음", { self: true });
     }
 
     return out;
+  }
+
+  /* ---------------- 위쪽 배너 (점검 결과로만 판정) ---------------- */
+
+  function refreshBanner() {
+    var b = $("statusBanner");
+    if (!b) return;
+    var badge = $("bannerBadge");
+    var checks = S.checks || [];
+    var nBad = 0, nWarn = 0, firstBad = "", firstWarn = "";
+    for (var i = 0; i < checks.length; i++) {
+      var c = checks[i];
+      if (c.level === "bad") { nBad++; if (!firstBad) firstBad = c.label; }
+      else if (c.level === "warn") { nWarn++; if (!firstWarn) firstWarn = c.label; }
+    }
+    var kind = "", msg = "";
+    var justFailed = S.fails.sheet === 1 && S.retryAt && Date.now() < S.retryAt + 30000;
+
+    if (demoRunning) {
+      kind = "demo";
+      msg = "시연 중 · 실제로 확인하지 않아요";
+    } else if (!S.lastSync) {
+      kind = "";
+      msg = "지금 확인하고 있어요";
+    } else if (justFailed && nBad) {
+      kind = "warn";
+      msg = "잠깐 못 봤어요 · 다시 확인하는 중";
+    } else if (nBad) {
+      kind = "err";
+      msg = "확인 필요 " + nBad + "건 · " + firstBad;
+    } else if (nWarn) {
+      kind = "warn";
+      msg = "주의 " + nWarn + "건 · " + firstWarn;
+    } else if (checks.length) {
+      kind = "ok";
+      msg = "모두 정상이에요";
+    } else {
+      kind = "";
+      msg = "지금 확인하고 있어요";
+    }
+    b.className = "status-banner show" + (kind ? " " + kind : "");
+    setText("bannerTxt", msg);
+    setText("bannerTime", S.lastSync ? hhmm(S.lastSync) + " 확인" : "");
+    if (badge) badge.hidden = !demoRunning;
   }
 
   /* ---------------- 화면 그리기 ---------------- */
@@ -852,113 +1284,95 @@
     var now = Date.now();
     var st = S.sheet.stat || {};
     var ma = st.misAgent || {};
-    var sp = st.salesPush || {};
-    var mp = st.misPush || {};
 
     /* 매장 컴퓨터 */
-    if (S.sheet.ok && ma.at) {
-      var age = (now - Number(ma.at)) / MIN;
-      var pcLv = age <= 20 ? "ok" : (age <= 60 ? "warn" : "bad");
-      var pcWord = age <= 20 ? "켜져 있음" : (age <= 60 ? "소식 없음" : "꺼져 있음");
-      setField("pc-status", pcWord, "card-num c-" + pcLv);
-      setField("pc-seen", ago(age) + " (" + hhmm(Number(ma.at)) + ")", "c-" + pcLv);
-      setField("pc-mode", waitWord(ma.mode));
-      setCardTint("cardPc", pcLv);
+    var pj = judgePc();
+    setField("pc-status", pj.word, "card-num c-" + pj.level);
+    if (pj.age !== null && pj.age !== undefined) {
+      setField("pc-seen", ago(pj.age) + " (" + hhmm(Number(ma.at)) + ")", "c-" + pj.level);
+    } else if (S.sheet.timeout) {
+      setField("pc-seen", "대답이 늦어요", "c-bad");
     } else {
-      setField("pc-status", S.sheet.ok ? "꺼져 있음" : "확인 안 됨", "card-num c-bad");
-      setField("pc-seen", "–", "c-bad");
-      setField("pc-mode", "–");
-      setCardTint("cardPc", "bad");
+      setField("pc-seen", "–", "c-" + pj.level);
     }
+    var modeRow = $("rowPcMode");
+    var mw = S.sheet.ok ? waitWord(ma.mode) : null;
+    if (mw) { if (modeRow) modeRow.hidden = false; setField("pc-mode", mw); }
+    else { if (modeRow) modeRow.hidden = true; }
+    setField("pc-basis", "기준 " + (S.sheet.at ? hhmm(S.sheet.at) : "–") + (S.sheet.stale ? " · 지난 값" : ""));
+    setCardTint("cardPc", pj.level === "mute" ? null : pj.level);
 
-    if (S.sheet.ok && sp.status) {
-      var sw = stateWord(sp.status);
-      var spAge = sp.at ? (now - Number(sp.at)) / MIN : 0;
-      var spLv = sw === "완료" ? "ok" : (sw === "진행 중" ? (spAge > 30 ? "bad" : "warn") : "bad");
-      var spTxt = sw;
-      if (sw === "완료" && sp.doneAt) spTxt = "완료 · " + hhmm(Number(sp.doneAt));
-      else if (sw === "진행 중") spTxt = "진행 중 · " + Math.round(spAge) + "분째";
-      setField("pc-sales", spTxt, "c-" + spLv);
-    } else {
-      setField("pc-sales", "정보 없음", "c-mute");
-    }
-
-    if (S.sheet.ok && mp.status) {
-      var mw = stateWord(mp.status);
-      var mLv = mw === "완료" ? "ok" : (mw === "진행 중" ? "warn" : "bad");
-      var mTxt = mw;
-      if (mw === "완료" && mp.date) mTxt = "완료 · " + mp.date.slice(5).replace("-", "/");
-      setField("pc-order", mTxt, "c-" + mLv);
-    } else {
-      setField("pc-order", "정보 없음", "c-mute");
-    }
+    /* 매출·발주 */
+    var sj = judgeSales();
+    setFieldTip("pc-sales", sj.text, sj.level === "mute" ? "c-mute" : "c-" + sj.level, sj.why);
+    var oj = judgeOrder();
+    setFieldTip("pc-order", oj.text, oj.level === "mute" ? "c-mute" : "c-" + oj.level, oj.why);
 
     /* 발주·라벨앱 */
-    if (S.ll.ok) {
+    if (S.ll.at) {
       var prs = Number(S.ll.prs || 0);
-      setField("ll-status", prs ? "확인 " + prs + "건" : "모두 반영됨", "card-num " + (prs ? "c-warn" : "c-ok"));
+      setField("ll-status", S.ll.stale ? "지난 값" : (prs ? "확인 " + prs + "건" : "모두 반영됨"),
+        "card-num " + (S.ll.stale ? "c-warn" : (prs ? "c-warn" : "c-ok")));
       setField("ll-prs", prs + "건", prs ? "c-warn" : "c-ok");
-      setField("ll-issues", Number(S.ll.issues || 0) + "건", Number(S.ll.issues || 0) >= 10 ? "c-bad" : "");
+      var iss = Number(S.ll.issues || 0);
+      setField("ll-issues", iss + "건", iss >= 10 ? "c-bad" : "");
       setField("ll-when", S.ll.commitAt ? ago((now - new Date(S.ll.commitAt).getTime()) / MIN) : "–");
       setField("ll-sha", S.ll.sha || "–");
-      setCardTint("cardLl", prs ? "warn" : "ok");
+      setField("ll-basis", "기준 " + hhmm(S.ll.at) + (S.ll.stale ? " · 갱신 못 함" : ""));
+      setCardTint("cardLl", S.ll.stale ? "warn" : (prs ? "warn" : "ok"));
     } else {
       setField("ll-status", "확인 안 됨", "card-num c-bad");
       setField("ll-prs", "–");
       setField("ll-issues", "–");
       setField("ll-when", "–");
       setField("ll-sha", "–");
+      setField("ll-basis", "기준 –");
       setCardTint("cardLl", "bad");
     }
     renderTaskLists();
 
     /* 이 현황판 상태 */
     var hubLv, hubWord;
+    var sheetGood = S.sheet.ok || S.sheet.stale;
     if (!S.lastSync) { hubLv = ""; hubWord = "확인 중"; }
     else if (S.hub.ok && S.ll.ok && S.sheet.ok) { hubLv = "ok"; hubWord = "최신"; }
-    else if (S.hub.ok || S.ll.ok || S.sheet.ok) { hubLv = "warn"; hubWord = "일부 지연"; }
+    else if (S.hub.ok || S.ll.ok || sheetGood) { hubLv = "warn"; hubWord = "일부 지연"; }
     else { hubLv = "bad"; hubWord = "확인 안 됨"; }
     setField("hub-status", hubWord, "card-num " + (hubLv ? "c-" + hubLv : "c-mute"));
     setField("hub-open", "정상", "c-ok");
     setField("hub-updated", S.lastSync ? ago((now - S.lastSync) / MIN) : "–");
     setField("hub-auto", "30초마다");
-    setCardTint("cardHub", hubLv === "warn" ? "warn" : hubLv === "bad" ? "bad" : hubLv || null);
+    setCardTint("cardHub", hubLv === "warn" ? "warn" : hubLv === "bad" ? "bad" : (hubLv || null));
 
-    /* 함께 일하는 AI 4인 */
-    var anyOk = !!(S.sheet.ok || S.ll.ok || S.hub.ok);
-    setField("node-pickle", anyOk ? "지금 활동 중" : "–", anyOk ? "c-ok" : "c-mute");
-    var activeCount = anyOk ? 1 : 0;
-
-    if (S.hub.ok && S.hub.commitAt) {
-      var hAge2 = (now - new Date(S.hub.commitAt).getTime()) / MIN;
-      setField("node-claude", ago(hAge2) + " 활동", hAge2 <= 1440 ? "c-ok" : "c-warn");
-      if (hAge2 <= 1440) activeCount++;
-    } else {
-      setField("node-claude", "소식 없음", "c-mute");
+    /* 함께 일하는 AI 4인 — 코드 기록 기준 */
+    setFieldTip("node-pickle", "기록 없음", "c-mute", "이 화면에는 피클의 활동을 알 수 있는 기록이 없어요");
+    var recent = 0;
+    function nodeTime(field, ts, tip) {
+      if (!ts) { setFieldTip(field, "기록 없음", "c-mute", tip); return; }
+      var a = (now - new Date(ts).getTime()) / MIN;
+      if (!isFinite(a) || a < 0) { setFieldTip(field, "기록 없음", "c-mute", tip); return; }
+      var lv = a <= 1440 ? "ok" : "warn";
+      if (a <= 1440) recent++;
+      setFieldTip(field, ago(a), "c-" + lv, tip + " · " + hhmm(ts) + (S.ll.stale ? " (지난 값)" : ""));
     }
-    if (S.ll.ok && S.ll.pullUpdatedAt) {
-      var pAge = (now - new Date(S.ll.pullUpdatedAt).getTime()) / MIN;
-      setField("node-aside", ago(pAge) + " 활동", pAge <= 1440 ? "c-ok" : "c-warn");
-      if (pAge <= 1440) activeCount++;
-    } else if (S.ll.ok) {
-      setField("node-aside", "최근 소식 없음", "c-mute");
+    if (S.hub.at) nodeTime("node-claude", S.hub.commitAt, "desk-widgets 저장소의 마지막 커밋 시각");
+    else nodeTime("node-claude", null, "desk-widgets 저장소 커밋을 못 봤어요");
+    if (S.ll.at) {
+      nodeTime("node-aside", S.ll.asideAt, "발주앱 PR 중 [그록 봇] 표시가 없는 것의 최근 시각");
+      nodeTime("node-grok", S.ll.grokAt, "발주앱 PR 중 [그록 봇] 표시가 있는 것의 최근 시각");
     } else {
-      setField("node-aside", "확인 안 됨", "c-bad");
+      nodeTime("node-aside", null, "발주앱 PR을 못 봤어요");
+      nodeTime("node-grok", null, "발주앱 PR을 못 봤어요");
     }
-    if (S.ll.ok && S.ll.commitAt) {
-      var cAge2 = (now - new Date(S.ll.commitAt).getTime()) / MIN;
-      setField("node-grok", ago(cAge2) + " 활동", cAge2 <= 1440 ? "c-ok" : "c-warn");
-      if (cAge2 <= 1440) activeCount++;
-    } else {
-      setField("node-grok", "확인 안 됨", "c-bad");
-    }
-    setField("nodes-status", activeCount + "명 활동", "card-num " + (activeCount >= 3 ? "c-ok" : (activeCount >= 1 ? "c-warn" : "c-bad")));
-    setCardTint("cardNodes", activeCount >= 3 ? "ok" : (activeCount >= 1 ? "warn" : "bad"));
+    setField("nodes-status", recent + "/3 활동", "card-num " + (recent >= 3 ? "c-ok" : (recent >= 1 ? "c-warn" : "c-bad")));
+    setCardTint("cardNodes", recent >= 3 ? "ok" : (recent >= 1 ? "warn" : "bad"));
 
     /* 점검 요약 */
     var checks = buildChecks();
-    var nOk = 0, nWarn = 0, nBad = 0;
+    S.checks = checks;
+    var nOk = 0, nWarn = 0, nBad = 0, nSelf = 0;
     for (var i = 0; i < checks.length; i++) {
+      if (checks[i].self) nSelf++;
       if (checks[i].level === "ok") nOk++;
       else if (checks[i].level === "warn") nWarn++;
       else nBad++;
@@ -972,6 +1386,8 @@
     setText("heroWarnNumber", String(nWarn));
     setText("heroBadNumber", String(nBad));
     setText("heroTotal", String(total));
+    setText("heroStore", String(total - nSelf));
+    setText("heroSelf", String(nSelf));
     setText("heroWhen", S.lastSync ? ago((now - S.lastSync) / MIN) + " 확인" : "지금 확인 중");
 
     /* 지금 살펴볼 것 */
@@ -1001,27 +1417,49 @@
 
     /* 연결 상태 */
     var okCount = (S.sheet.ok ? 1 : 0) + (S.ll.ok ? 1 : 0) + (S.hub.ok ? 1 : 0);
-    var connWord = okCount === 3 ? "모두 연결됨" : (okCount > 0 ? "일부 연결 안 됨" : "연결 안 됨");
-    setField("conn-status", connWord, "card-num " + (okCount === 3 ? "c-ok" : (okCount > 0 ? "c-warn" : "c-bad")));
-    setField("conn-pc", S.sheet.ok ? "정상" : "확인 안 됨", S.sheet.ok ? "c-ok" : "c-bad");
+    var connWord = okCount === 3 ? (S.sheet.stale || S.ll.stale || S.hub.stale ? "지난 값" : "모두 연결됨")
+      : (okCount > 0 ? "일부 연결 안 됨" : "연결 안 됨");
+    var connLv = okCount === 3 ? (S.sheet.stale || S.ll.stale || S.hub.stale ? "warn" : "ok") : (okCount > 0 ? "warn" : "bad");
+    setField("conn-status", connWord, "card-num c-" + connLv);
+    setField("conn-pc", S.sheet.ok ? "정상" : (S.sheet.stale ? "지난 값" : "확인 안 됨"), S.sheet.ok ? "c-ok" : (S.sheet.stale ? "c-warn" : "c-bad"));
     var gradable = (S.ll.ok ? 1 : 0) + (S.hub.ok ? 1 : 0);
-    setField("conn-code", gradable === 2 ? "정상" : (gradable === 1 ? "일부만 정상" : "확인 안 됨"), gradable === 2 ? "c-ok" : (gradable === 1 ? "c-warn" : "c-bad"));
+    var codeStale = (S.ll.stale || S.hub.stale);
+    var codeWord = gradable === 2 ? (codeStale ? "지난 값" : "정상") : (gradable === 1 ? "일부만 정상" : "확인 안 됨");
+    var codeLv = gradable === 2 ? (codeStale ? "warn" : "ok") : (gradable === 1 ? "warn" : "bad");
+    setField("conn-code", codeWord, "c-" + codeLv);
     updateNextCheck(now);
     if (S.ghRate === null) {
       setField("conn-rate", "아직 모름", "c-mute");
     } else {
       setField("conn-rate", "60번 중 " + S.ghRate + "번 남음", S.ghRate > 15 ? "c-ok" : (S.ghRate > 5 ? "c-warn" : "c-bad"));
     }
-    setCardTint("cardSignals", okCount === 3 ? "ok" : (okCount > 0 ? "warn" : "bad"));
+    setField("conn-note", "코드 저장소는 10분에 한 번 확인해요");
+    /* 버튼마다 숨은 비용(한도)을 미리 알려준다 */
+    var left = (S.ghRate === null) ? "" : " · 남은 " + S.ghRate + "번";
+    setBtnTip("ll", "코드 저장소를 " + 3 + "번 확인해요" + left);
+    setBtnTip("hub", "코드 저장소를 " + 2 + "번 확인해요" + left);
+    setBtnTip("nodes", "코드 저장소를 " + 5 + "번 확인해요" + left);
+    setCardTint("cardSignals", connLv);
 
     /* 살아 있음 표시 */
     var dot = $("liveDot");
-    if (dot) dot.className = "pulse" + (anyOk ? "" : " off");
+    if (dot) dot.className = "pulse" + ((S.sheet.ok || S.ll.ok || S.hub.ok) ? "" : " off");
+
+    refreshBanner();
   }
 
   function updateNextCheck(now) {
+    var block = (S.ghBlockedAt && now < S.ghBlockedAt) ? (S.ghBlockedAt - now) : 0;
+    if (block) {
+      setField("conn-next", Math.max(1, Math.ceil(block / MIN)) + "분 뒤 (한도)", "c-bad");
+      return;
+    }
+    if (S.ghRate !== null && S.ghRate <= 12 && S.ghReset && S.ghReset > now) {
+      setField("conn-next", Math.max(1, Math.ceil((S.ghReset - now) / MIN)) + "분 뒤 (아껴요)", "c-warn");
+      return;
+    }
     var wait = Math.max(0, S.nextGhAt - now);
-    setField("conn-next", wait <= 0 ? "곧 확인" : Math.ceil(wait / 60000) + "분 뒤", "c-mute");
+    setField("conn-next", wait <= 0 ? "곧 확인" : Math.ceil(wait / MIN) + "분 뒤", "c-mute");
   }
 
   function probRow(item) {
@@ -1031,10 +1469,9 @@
     left.className = "row-line";
     var k = document.createElement("div");
     k.className = "row-k";
-    k.textContent = item.label;
+    k.textContent = item.label + (item.self ? " (이 화면)" : "");
     left.appendChild(k);
 
-    /* 무슨 일인지 바로 보이게 제목과 가는 길을 붙임 */
     var items = item.act ? itemsOf(item.act) : [];
     var top = items.length ? items[0] : null;
     var detail = item.detail;
@@ -1050,13 +1487,26 @@
       left.appendChild(d);
     }
     if (top && top.url) {
+      var acts = document.createElement("div");
+      acts.className = "row-acts";
       var go = document.createElement("a");
-      go.className = "go-btn";
+      go.className = "go-btn small";
       go.href = top.url;
       go.target = "_blank";
       go.rel = "noopener";
       go.textContent = goLabel(item.act);
-      left.appendChild(go);
+      acts.appendChild(go);
+      left.appendChild(acts);
+    } else if (item.retry) {
+      var acts2 = document.createElement("div");
+      acts2.className = "row-acts";
+      var rb = document.createElement("button");
+      rb.type = "button";
+      rb.className = "go-btn small";
+      rb.setAttribute("data-retry", item.retry);
+      rb.textContent = "다시 확인";
+      acts2.appendChild(rb);
+      left.appendChild(acts2);
     }
 
     var v = document.createElement("div");
@@ -1156,7 +1606,7 @@
     btn.classList.remove("loading", "done");
     btn.disabled = false;
     if (btn.id === "btnAllRefresh") setText("refreshLabel", "새로고침");
-    else btn.textContent = btn.getAttribute("data-base") || "확인";
+    else btn.textContent = btn.getAttribute("data-base") || "다시 확인";
   }
 
   /* ---------------- 열린 일 목록 ---------------- */
@@ -1186,6 +1636,10 @@
     head.appendChild(no);
     head.appendChild(t);
     wrap.appendChild(head);
+    var meta = document.createElement("div");
+    meta.className = "task-at";
+    meta.textContent = it.at ? "고친 때 " + hhmm(it.at) + " · " + ago((Date.now() - new Date(it.at).getTime()) / MIN) : "시각을 못 봤어요";
+    wrap.appendChild(meta);
     if (it.url) {
       var go = document.createElement("a");
       go.className = "go-btn";
@@ -1202,11 +1656,25 @@
     var box = $(boxId);
     if (!box) return;
     box.innerHTML = "";
+
+    /* 기준 시각 — 실패해도 옛 목록을 지우지 않고 언제 것인지 밝힌다 */
+    var at = kind === "issues" ? (S.ll.issuesAt || S.ll.at) : S.ll.at;
+    var meta = document.createElement("div");
+    meta.className = "task-meta";
+    if (!at) {
+      meta.textContent = "아직 받지 못했어요";
+    } else {
+      var fail = S.ll.err && S.ll.stale;
+      meta.textContent = "기준 " + hhmm(at) + (fail ? " · 지금은 갱신 못 함 (" + errWord(S.ll.err) + ")" : "");
+      if (fail) meta.className = "task-meta stale";
+    }
+    box.appendChild(meta);
+
     var items = itemsOf(kind);
     if (!items.length) {
       var e = document.createElement("div");
       e.className = "task-empty";
-      e.textContent = (S.ll && S.ll.ok) ? "지금은 없어요." : "목록을 아직 못 받았어요.";
+      e.textContent = (S.ll.at && !(S.ll.err && S.ll.stale)) ? "지금은 없어요." : "목록을 아직 못 받았어요.";
       box.appendChild(e);
     } else {
       var n = Math.min(items.length, 8);
@@ -1235,112 +1703,168 @@
     }
   }
 
+  function toggleList(row) {
+    var id = row.getAttribute("data-toggle");
+    if (!id) return;
+    var kind = id === "listPrs" ? "prs" : "issues";
+    openLists[kind] = !openLists[kind];
+    row.classList.toggle("open", openLists[kind]);
+    row.setAttribute("aria-expanded", openLists[kind] ? "true" : "false");
+    var box = $(id);
+    if (box) box.hidden = !openLists[kind];
+    if (openLists[kind] && kind === "issues") {
+      /* 목록은 펼칠 때 한 번만 받아 온다 */
+      loadIssues().then(function () { render(); }, function () { render(); });
+    }
+  }
+
   /* ---------------- 전체 확인 ---------------- */
 
-  function syncAll(forceGithub, note, quiet) {
+  function setCardButtonsBusy(on) {
+    var btns = document.querySelectorAll("[data-refresh]");
+    for (var i = 0; i < btns.length; i++) {
+      var b = btns[i];
+      if (b.classList.contains("loading")) continue;
+      if (on) { b.disabled = true; b.setAttribute("data-locked", "1"); }
+      else if (b.getAttribute("data-locked")) { b.disabled = false; b.removeAttribute("data-locked"); }
+    }
+  }
+
+  function runSync(forceGithub, quiet) {
+    var now = Date.now();
+    var blocked = S.ghBlockedAt && now < S.ghBlockedAt;
+    var ghDue = !!forceGithub || (now >= S.nextGhAt && !blocked);
     var jobs = [];
 
     jobs.push(loadSheet().catch(function () { return null; }));
 
-    var ghDue = forceGithub || (Date.now() >= S.nextGhAt);
     if (ghDue) {
-      S.nextGhAt = Date.now() + GH_TTL_MS;
+      S.nextGhAt = now + GH_TTL_MS;
       jobs.push(loadLabelList(!!forceGithub).catch(function () { return null; }));
       jobs.push(loadHub(!!forceGithub).catch(function () { return null; }));
     }
 
+    setCardButtonsBusy(true);
     return Promise.all(jobs).then(function () {
+      /* 한도가 얼마 안 남았으면 리셋 때까지 아낀다 */
+      if (S.ghRate !== null && S.ghRate <= 12 && S.ghReset) S.nextGhAt = Math.max(S.nextGhAt, S.ghReset);
       S.lastSync = Date.now();
       render();
-      var okCount = (S.sheet.ok ? 1 : 0) + (S.ll.ok ? 1 : 0) + (S.hub.ok ? 1 : 0);
-      if (okCount === 3) {
-        showToast("방금 확인 완료 · 모두 정상이에요", "ok", quiet);
-      } else if (okCount > 0) {
-        showToast("일부만 확인했어요 · 잠시 뒤 다시 확인할게요", "warn", quiet);
-      } else {
-        showToast("지금은 확인하지 못했어요 · 인터넷을 확인해 주세요", "err", false);
-      }
-      return okCount;
+      return (S.sheet.ok ? 1 : 0) + (S.ll.ok ? 1 : 0) + (S.hub.ok ? 1 : 0);
+    }).then(function (n) {
+      setCardButtonsBusy(false);
+      return n;
+    }, function (e) {
+      setCardButtonsBusy(false);
+      throw e;
     });
   }
 
+  function syncAll(forceGithub, quiet) {
+    if (syncing) return syncing;              // 진행 중이면 같은 약속을 함께 쓴다
+    syncing = runSync(forceGithub, quiet);
+    function done() { syncing = null; }
+    syncing.then(done, done);
+    return syncing;
+  }
+
   function handleRefresh(kind, btn) {
-    if (!btn || btn.classList.contains("loading")) return;
+    if (!btn || btn.disabled || btn.classList.contains("loading")) return;
     var bar = barRun(barEl(kind));
     lockBtn(btn);
     var ok = true;
     var p;
+
     if (kind === "pc") {
       p = loadSheet().then(function () {
         S.lastSync = Date.now(); render();
-        showToast("매장 컴퓨터를 다시 확인했어요", "ok");
+        showToast("매장 컴퓨터를 다시 확인했어요");
       }).catch(function () {
         S.lastSync = Date.now(); render(); ok = false;
-        showToast("매장 컴퓨터가 대답하지 않아요", "err");
+        showToast(S.sheet.timeout ? "매장 컴퓨터 대답이 늦어요 (8초)" : "매장 컴퓨터가 대답하지 않아요");
       });
     } else if (kind === "ll") {
       p = loadLabelList(true).then(function (d) {
         S.lastSync = Date.now(); render();
-        showToast("발주앱 확인 완료 · 기다리는 수정 " + d.prs + "건", "ok");
-      }).catch(function () {
+        showToast("발주앱 확인 완료 · 기다리는 수정 " + d.prs + "건");
+      }).catch(function (e) {
         S.lastSync = Date.now(); render(); ok = false;
-        showToast("발주앱을 지금은 확인할 수 없어요", "err");
+        showToast(/한도/.test(String(e && e.message)) ? "코드 저장소 한도가 다 됐어요 · 지난 값을 보여드려요" : "발주앱을 지금은 확인할 수 없어요");
       });
     } else if (kind === "hub") {
       p = loadHub(true).then(function (d) {
         S.lastSync = Date.now(); render();
         ok = !!d.ok;
-        showToast(d.ok ? "현황판을 다시 확인했어요" : "현황판 기록을 못 봤어요", d.ok ? "ok" : "warn");
+        showToast(d.ok ? "현황판을 다시 확인했어요" : "현황판 기록을 못 봤어요");
       }).catch(function () {
         S.lastSync = Date.now(); render(); ok = false;
-        showToast("현황판 기록을 못 봤어요", "err");
+        showToast("현황판 기록을 못 봤어요");
       });
     } else if (kind === "nodes") {
-      p = Promise.all([loadSheet().catch(function () { return null; }), loadLabelList(true).catch(function () { return null; }), loadHub(true).catch(function () { return null; })])
-        .then(function () {
-          S.nextGhAt = Date.now() + GH_TTL_MS;
-          S.lastSync = Date.now(); render();
-          ok = !!(S.sheet.ok || S.ll.ok || S.hub.ok);
-          showToast("AI 4인 활동을 다시 확인했어요", ok ? "ok" : "warn");
-        });
+      p = Promise.all([
+        loadSheet().catch(function () { return null; }),
+        loadLabelList(true).catch(function () { return null; }),
+        loadHub(true).catch(function () { return null; })
+      ]).then(function () {
+        S.nextGhAt = Math.max(S.nextGhAt, Date.now() + GH_TTL_MS);
+        S.lastSync = Date.now(); render();
+        ok = !!(S.sheet.ok || S.ll.ok || S.hub.ok);
+        showToast(ok ? "AI 활동 기록을 다시 확인했어요" : "지금은 기록을 못 봤어요");
+      });
     } else if (kind === "signals") {
       p = loadSheet().then(function () {
         S.lastSync = Date.now(); render();
-        showToast("연결 상태를 다시 확인했어요", "ok");
+        showToast("연결 상태를 다시 확인했어요");
       }).catch(function () {
         S.lastSync = Date.now(); render(); ok = false;
-        showToast("연결이 잠시 끊겼어요", "err");
+        showToast("연결이 잠시 끊겼어요");
       });
     } else {
-      p = syncAll(true, "전체 확인").then(function (n) { ok = n > 0; });
+      p = syncAll(true, false).then(function (n) { ok = n > 0; });
     }
 
+    /* 어떤 경우에도 버튼과 막대가 잠긴 채 남지 않게 */
+    var watchdog = setTimeout(function () {
+      if (btn.classList.contains("loading")) resetBtn(btn);
+      barDone(bar, false);
+    }, WATCHDOG_MS);
+
     Promise.resolve(p).then(function () {
-      return barDone(bar, ok);
-    }).then(function () {
-      if (ok) doneBtn(btn); else resetBtn(btn);
+      clearTimeout(watchdog);
+      return barDone(bar, ok).then(function () { if (ok) doneBtn(btn); else resetBtn(btn); });
     }, function () {
+      clearTimeout(watchdog);
       return barDone(bar, false).then(function () { resetBtn(btn); });
     });
   }
 
   document.addEventListener("click", function (e) {
-    var t = e.target && e.target.closest ? e.target.closest("[data-toggle]") : null;
-    if (t) {
-      var id = t.getAttribute("data-toggle");
-      var kind = id === "listPrs" ? "prs" : "issues";
-      openLists[kind] = !openLists[kind];
-      t.classList.toggle("open", openLists[kind]);
-      t.setAttribute("aria-expanded", openLists[kind] ? "true" : "false");
-      var box = $(id);
-      if (box) box.hidden = !openLists[kind];
+    var target = e.target && e.target.closest ? e.target : null;
+    if (!target) return;
+
+    var retry = target.closest("[data-retry]");
+    if (retry) {
+      e.preventDefault();
+      handleRefresh(retry.getAttribute("data-retry"), retry);
       return;
     }
-    var b = e.target && e.target.closest ? e.target.closest("[data-refresh]") : null;
+    var t = target.closest("[data-toggle]");
+    if (t) { toggleList(t); return; }
+    var b = target.closest("[data-refresh]");
     if (b) {
       e.preventDefault();
       handleRefresh(b.getAttribute("data-refresh"), b);
     }
+  });
+
+  /* 키보드로도 목록을 열 수 있게 */
+  document.addEventListener("keydown", function (e) {
+    var key = e.key;
+    if (key !== "Enter" && key !== " " && key !== "Spacebar") return;
+    var t = e.target && e.target.closest ? e.target.closest("[data-toggle]") : null;
+    if (!t) return;
+    e.preventDefault();
+    toggleList(t);
   });
 
   var allBtn = $("btnAllRefresh");
@@ -1350,10 +1874,17 @@
       var bar = barRun($("barTop"));
       lockBtn(allBtn);
       allBtn.classList.add("syncing");
-      sec = AUTO_SEC;
+      nextAutoAt = Date.now() + AUTO_SEC * 1000;
       var ok = false;
-      syncAll(true, "전체 확인").then(function (n) { ok = n > 0; }, function () { ok = false; })
-        .then(function () { return barDone(bar, ok); })
+      var watchdog = setTimeout(function () {
+        if (allBtn.classList.contains("loading")) resetBtn(allBtn);
+        barDone(bar, false);
+      }, WATCHDOG_MS);
+      syncAll(true, false).then(function (n) { ok = n > 0; }, function () { ok = false; })
+        .then(function () {
+          clearTimeout(watchdog);
+          return barDone(bar, ok);
+        })
         .then(function () {
           allBtn.classList.remove("syncing");
           if (ok) doneBtn(allBtn); else resetBtn(allBtn);
@@ -1362,22 +1893,48 @@
     });
   }
 
-  /* 30초마다 저절로 다시 확인 */
-  function updateLiveBits() {
-    var now = Date.now();
-    setField("hub-auto-sub", "다음 확인 " + (sec > 0 ? sec : AUTO_SEC) + "초 뒤");
+  /* ---------------- 시간 표시 · 자동 확인 ---------------- */
+
+  function updateLiveBits(now) {
+    now = now || Date.now();
+    var left = Math.max(0, Math.ceil((nextAutoAt - now) / 1000));
+    setField("hub-auto-sub", left > 0 ? "다음 확인 " + left + "초 뒤" : "지금 확인 중");
     if (S.lastSync) setField("hub-updated", ago((now - S.lastSync) / MIN));
     updateNextCheck(now);
   }
 
   function tick() {
-    sec--;
-    if (sec <= 0) {
-      sec = AUTO_SEC;
-      if (!demoRunning) syncAll(false, "자동 확인", true);
+    var now = Date.now();
+    if (!demoRunning) {
+      if (S.retryAt && now >= S.retryAt) {
+        S.retryAt = 0;
+        nextAutoAt = now + AUTO_SEC * 1000;
+        syncAll(false, true);
+      } else if (now >= nextAutoAt) {
+        nextAutoAt = now + AUTO_SEC * 1000;
+        syncAll(false, true);
+      }
     }
-    updateLiveBits();
+    updateLiveBits(now);
   }
+
+  /* 화면으로 돌아오면 시계를 바로 맞춘다 */
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) return;
+    var now = Date.now();
+    updateLiveBits(now);
+    render();
+    if (!demoRunning && now >= nextAutoAt) {
+      nextAutoAt = now + AUTO_SEC * 1000;
+      syncAll(false, true);
+    }
+  });
+
+  window.addEventListener("online", function () {
+    S.retryAt = 0;
+    nextAutoAt = Date.now() + AUTO_SEC * 1000;
+    syncAll(true, true);
+  });
 
   /* 시연 */
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -1390,7 +1947,8 @@
     if (!cards.length) return;
     demoRunning = true;
     setBusy(btn, true);
-    showToast("시연을 시작해요", "");
+    refreshBanner();
+    showToast("시연이에요 · 실제 확인은 하지 않아요");
     cur.style.opacity = "1";
     var steps = Math.min(cards.length, 4);
     var seq = Promise.resolve();
@@ -1419,12 +1977,14 @@
       cur.style.opacity = "0";
       demoRunning = false;
       setBusy(btn, false);
-      showToast("시연 끝 · 카드 버튼을 누르면 다시 확인해요", "ok");
-      return syncAll(true, "시연 마무리");
+      refreshBanner();
+      showToast("시연 끝 · 아래 값은 마지막으로 확인한 값이에요");
+      updateLiveBits();
     }).catch(function () {
       demoRunning = false;
       setBusy(btn, false);
       cur.style.opacity = "0";
+      refreshBanner();
     });
   }
 
@@ -1433,9 +1993,22 @@
 
   /* 시작 */
   function boot() {
-    S.nextGhAt = Date.now();       // 첫 확인은 바로
-    syncAll(true, "첫 확인").catch(function () {});
-    autoTimer = setInterval(tick, 1000);
+    restoreCache();
+    S.nextGhAt = 0;                 // 첫 확인은 바로
+    nextAutoAt = Date.now() + AUTO_SEC * 1000;
+    if (S.sheet.stat || S.ll.at || S.hub.at) render();   // 지난 값을 먼저 보여준다
+    syncAll(true, true);
+    setInterval(tick, 1000);
+  }
+
+  /* 오프라인에서도 마지막 화면이 뜨게 */
+  if ("serviceWorker" in navigator) {
+    var secure = location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    if (secure) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+      });
+    }
   }
 
   if (document.readyState === "loading") {
