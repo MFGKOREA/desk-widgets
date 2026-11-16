@@ -1325,6 +1325,8 @@
   function loadOrderToday(force) {
     var key = todayKey();
     return once("order", function () {
+      /* 화면을 보고 있지 않을 때는 1.3MB를 받지 않는다 (돌아오면 그때 새로 읽는다) */
+      if (document.hidden && !force) return Promise.resolve(S.order);
       /* 방금 받은 값이면 그대로 쓴다 (전체 자료가 커서 30초마다 받지 않는다) */
       if (!force && S.order.ok && S.order.key === key && !S.order.stale && Date.now() - S.order.at < ORDER_TTL_MS) {
         return Promise.resolve(S.order);
