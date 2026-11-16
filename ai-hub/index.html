@@ -73,7 +73,7 @@
     overflow: hidden;
   }
 
-  /* 창 상단 — 맥 신호등 대신 기하학 마크(■ ● ▲) */
+  /* 창 상단 — 왼쪽은 아이콘·제목만 둔다(신호등 자리 마크 없음) */
   .win-top {
     padding: 10px 12px;
     border-bottom: 1px solid var(--line);
@@ -81,12 +81,6 @@
     background: var(--win);
   }
   .top-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .dots { display: flex; gap: 6px; align-items: center; flex: 0 0 auto; }
-  .dot { width: 8px; height: 8px; flex: 0 0 auto; background: var(--ink); }
-  .dot.r { border-radius: 1px; transform: rotate(0deg); }
-  .dot.y { border-radius: 50%; }
-  .dot.g { border-radius: 2px; transform: rotate(45deg); }
-  .dot.r, .dot.y, .dot.g { opacity: 0.92; }
   .brand {
     width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto; display: block;
     box-shadow: 0 0 0 1px var(--win-line); background: #ffffff;
@@ -528,8 +522,11 @@
 
   /* 아주 좁은 화면(360px 등) */
   @media (max-width: 372px) {
-    .dots { display: none; }
-    .addr { font-size: 12.5px; }
+    .win-top { padding: 10px; gap: 6px; }
+    .top-left { gap: 7px; }
+    .top-actions { gap: 5px; }
+    .brand { width: 28px; height: 28px; }
+    .addr { font-size: 12px; }
     .chip-btn { padding: 5px 9px; }
     .card-num { font-size: 14.5px; }
     .row-k { font-size: 13.5px; }
@@ -645,7 +642,6 @@
     .seg-ok { background: #fafafa; }
     .seg-warn { background: #a1a1a6; }
     .seg-bad { background: #52525b; }
-    .dot.r, .dot.y, .dot.g { background: #fafafa; }
     .status-banner { background: #18181b; border-bottom-color: #262629; }
     .status-banner::before { background: #fafafa; }
     .status-banner.warn, .status-banner.err, .status-banner.demo { background: #18181b; }
@@ -670,7 +666,6 @@
 <div class="win">
   <div class="win-top">
     <div class="top-left">
-      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
       <img class="brand" src="icon-face.png?v=20261116-3" alt="HUB" width="30" height="30">
       <div class="addr">수원컨벤션 AI 현황판</div>
     </div>
