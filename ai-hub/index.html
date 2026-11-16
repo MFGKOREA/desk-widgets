@@ -993,7 +993,7 @@
           S.ll.err = msg;
           S.ll.errAt = Date.now();
         } else {
-          S.ll = { ok: false, at: Date.now(), err: msg, errAt: Date.now(), stale: false, items: {} };
+          S.ll = { ok: false, at: null, err: msg, errAt: Date.now(), stale: false, items: {} };
         }
         S.fails.ll++;
         throw e;
@@ -1050,7 +1050,7 @@
       }).catch(function (e) {
         var msg = String(e && e.message ? e.message : e);
         if (S.hub.at) { S.hub.ok = true; S.hub.stale = true; S.hub.err = msg; S.hub.errAt = Date.now(); }
-        else { S.hub = { ok: false, at: Date.now(), err: msg, errAt: Date.now(), stale: false }; }
+        else { S.hub = { ok: false, at: null, err: msg, errAt: Date.now(), stale: false }; }
         S.fails.hub++;
         throw e;
       });
