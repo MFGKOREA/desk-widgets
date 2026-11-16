@@ -1720,7 +1720,7 @@
     }).then(function (res) {
       if (!pcJob) return;
       if (!res || !res.ok) {
-        if (res && res.auth) { flowStop(false, "시트가 잠겨 있어 시킬 수 없어요 · ⚙️에서 가게 키를 넣어 주세요"); return; }
+        if (res && res.auth) { flowStop(false, "시트가 잠겨 있어 지금은 매장 PC에 시킬 수 없어요 (가게 키가 필요해요)"); return; }
         throw new Error((res && res.error) || "보내지 못했어요");
       }
       pollPc(kind, value.id, value.at);
