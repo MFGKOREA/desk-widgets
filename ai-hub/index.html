@@ -35,6 +35,8 @@
     --stat: #f7f7f5;
     --bar-bg: #efede8;
     --bar-in: #e9e7e1;
+    --pill-bg: #f6f5f0;
+    --pill-line: #ddd9cf;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   [hidden] { display: none !important; }
@@ -438,15 +440,31 @@
   .order-block { display: flex; flex-direction: column; gap: 5px; padding-top: 3px; }
   .order-when:empty { display: none; }
 
-  /* 어플 관리 — 앱마다 상태 한 줄 */
-  .app-list { gap: 3px; }
+  /* 어플 관리 — 왼쪽에 상태 한 줄, 오른쪽은 누르면 바로 열리는 버튼 */
+  .app-list { gap: 2px; }
   .row.app-row {
     text-decoration: none; color: inherit; border-radius: 10px; align-items: center;
-    padding: 3px 0; -webkit-tap-highlight-color: transparent;
+    padding: 4px 0; gap: 10px; -webkit-tap-highlight-color: transparent;
   }
   .row.app-row:active { background: rgba(24, 24, 27, 0.045); }
-  .row.app-row .row-v { display: flex; align-items: baseline; gap: 1px; }
-  .row.app-row .chev { font-size: 11px; }
+  .row.app-row:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 2px; }
+  .row.app-row .row-line { gap: 3px; }
+  .app-sub { display: flex; align-items: center; gap: 5px; }
+  .sdot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; background: #b6b4ab; }
+  .sdot.ok { background: #1f9d57; }
+  .sdot.warn { background: #d3891a; }
+  .sdot.bad { background: #cf443c; }
+  .sdot.mute { background: #b6b4ab; }
+  .open-pill {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; font-weight: 800; letter-spacing: -0.1px; color: var(--ink);
+    background: var(--pill-bg); border: 1px solid var(--pill-line); border-radius: 999px;
+    padding: 6px 10px 6px 11px; min-height: 30px; line-height: 1.1; white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
+  }
+  .open-pill i { font-style: normal; font-size: 10.5px; color: var(--mute); margin-top: -1px; transition: color 0.15s; }
+  .row.app-row:active .open-pill { background: #18181b; border-color: #18181b; color: #fff; transform: scale(0.97); }
+  .row.app-row:active .open-pill i { color: #fff; }
   .rows.sub { border-top: 1px dashed var(--line2); margin-top: 3px; padding-top: 8px; }
 
   .foot { font-size: 11.5px; color: var(--mute); line-height: 1.65; padding: 2px 2px 0; }
@@ -506,6 +524,8 @@
       --stat: #222221;
       --bar-bg: #2c2c2a;
       --bar-in: #34342f;
+      --pill-bg: #232321;
+      --pill-line: #3a3a37;
     }
     body { color: var(--ink); }
     .win { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); }
@@ -524,6 +544,13 @@
     .pc-go.loading { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
     .fs { background: #222221; }
     .fs.on { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
+    .row.app-row:active .open-pill { background: #f1efe9; border-color: #f1efe9; color: #18181b; }
+    .row.app-row:active .open-pill i { color: #18181b; }
+    .sdot { background: #6f6d67; }
+    .sdot.ok { background: #5fd394; }
+    .sdot.warn { background: #f0b352; }
+    .sdot.bad { background: #f5837a; }
+    .sdot.mute { background: #6f6d67; }
     .fs.ok { background: #10281c; border-color: #1f5236; color: #6ee7a8; }
     .fs.bad { background: #2a1715; border-color: #4c2521; color: #f5837a; }
     .row.app-row:active { background: rgba(255, 255, 255, 0.06); }
@@ -702,28 +729,28 @@
         <div class="lbar card-lbar" id="barLl" aria-hidden="true"><div class="lbar-in"><i></i><b></b></div></div>
         <div class="rows app-list">
           <a class="row app-row" href="https://mfgkorea.github.io/label-list/order.html" target="_blank" rel="noopener">
-            <div class="row-line"><div class="row-k">발주·프랩 어플</div><div class="row-sub" data-field="app-order-sub">불러오는 중</div></div>
-            <div class="row-v"><strong data-field="app-order">–</strong><span class="chev">↗</span></div>
+            <div class="row-line"><div class="row-k">발주·프랩 어플</div><div class="row-sub app-sub" data-field="app-order-sub"><i class="sdot mute"></i>불러오는 중</div></div>
+            <span class="open-pill">열기<i>↗</i></span>
           </a>
           <a class="row app-row" href="https://mfgkorea.github.io/label-list/" target="_blank" rel="noopener">
-            <div class="row-line"><div class="row-k">한글표시사항 어플</div><div class="row-sub" data-field="app-label-sub">불러오는 중</div></div>
-            <div class="row-v"><strong data-field="app-label">–</strong><span class="chev">↗</span></div>
+            <div class="row-line"><div class="row-k">한글표시사항 어플</div><div class="row-sub app-sub" data-field="app-label-sub"><i class="sdot mute"></i>불러오는 중</div></div>
+            <span class="open-pill">열기<i>↗</i></span>
           </a>
-          <a class="row app-row" href="https://github.com/MFGKOREA/pl-dashboard" target="_blank" rel="noopener">
-            <div class="row-line"><div class="row-k">PL 보드</div><div class="row-sub" data-field="app-pl-sub">불러오는 중</div></div>
-            <div class="row-v"><strong data-field="app-pl">–</strong><span class="chev">↗</span></div>
+          <a class="row app-row" href="https://claude.ai/artifact/TMnfLMTZeGpxyfwC8KuykP" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">PL 보드</div><div class="row-sub app-sub" data-field="app-pl-sub"><i class="sdot mute"></i>불러오는 중</div></div>
+            <span class="open-pill">열기<i>↗</i></span>
           </a>
-          <a class="row app-row" href="https://github.com/MFGKOREA/hr-board" target="_blank" rel="noopener">
-            <div class="row-line"><div class="row-k">HR 보드</div><div class="row-sub" data-field="app-hr-sub">불러오는 중</div></div>
-            <div class="row-v"><strong data-field="app-hr">–</strong><span class="chev">↗</span></div>
+          <a class="row app-row" href="https://hr-board-teal.vercel.app" target="_blank" rel="noopener">
+            <div class="row-line"><div class="row-k">HR 보드</div><div class="row-sub app-sub" data-field="app-hr-sub"><i class="sdot mute"></i>불러오는 중</div></div>
+            <span class="open-pill">열기<i>↗</i></span>
           </a>
           <a class="row app-row" href="https://mfgkorea.github.io/desk-widgets/" target="_blank" rel="noopener">
-            <div class="row-line"><div class="row-k">데스크 위젯</div><div class="row-sub" data-field="app-widget-sub">불러오는 중</div></div>
-            <div class="row-v"><strong data-field="app-widget">–</strong><span class="chev">↗</span></div>
+            <div class="row-line"><div class="row-k">데스크 위젯</div><div class="row-sub app-sub" data-field="app-widget-sub"><i class="sdot mute"></i>불러오는 중</div></div>
+            <span class="open-pill">열기<i>↗</i></span>
           </a>
           <a class="row app-row" href="https://github.com/MFGKOREA/label-list/tree/main/gw-agent" target="_blank" rel="noopener">
-            <div class="row-line"><div class="row-k">GW 에이전트</div><div class="row-sub" data-field="app-gw-sub">불러오는 중</div></div>
-            <div class="row-v"><strong data-field="app-gw">–</strong><span class="chev">↗</span></div>
+            <div class="row-line"><div class="row-k">GW 에이전트</div><div class="row-sub app-sub" data-field="app-gw-sub"><i class="sdot mute"></i>불러오는 중</div></div>
+            <span class="open-pill">열기<i>↗</i></span>
           </a>
         </div>
         <div class="rows sub">
@@ -2054,10 +2081,15 @@
     }
   }
 
-  /* 어플 관리 — 앱 6개의 상태를 한 줄씩 */
-  function appSet(key, level, word, sub) {
-    setField("app-" + key, word, level === "mute" ? "c-mute" : "c-" + level);
-    if (sub) setField("app-" + key + "-sub", sub);
+  /* 어플 관리 — 앱마다 왼쪽에 상태 점 한 줄, 오른쪽은 누르면 바로 열리는 링크 */
+  function appSub(key, level, text) {
+    var el = qs('[data-field="app-' + key + '-sub"]');
+    if (!el) return;
+    el.textContent = "";
+    var dot = document.createElement("i");
+    dot.className = "sdot " + (level || "mute");
+    el.appendChild(dot);
+    el.appendChild(document.createTextNode(text));
   }
 
   function renderApps(now) {
@@ -2067,61 +2099,62 @@
     /* 1. 발주·프랩 어플 — 시트(Apps Script)가 대답하는지 */
     if (S.sheet.ok) {
       okN++;
-      appSet("order", "ok", "정상", "Apps Script " + hhmm(S.sheet.at) + " 응답");
+      var sheetAge = (now - Number(S.sheet.at)) / MIN;
+      appSub("order", "ok", sheetAge < 3 ? "방금 응답" : hhmm(S.sheet.at) + " 응답");
     } else if (S.sheet.stale) {
-      appSet("order", "warn", "지난 값", "Apps Script 응답이 늦어요 · " + hhmm(S.sheet.lastOkAt));
+      appSub("order", "warn", "응답이 늦어요 · " + hhmm(S.sheet.lastOkAt) + " 값");
     } else {
-      appSet("order", "bad", "연결 안 됨", "Apps Script에 못 닿았어요");
+      appSub("order", "bad", "응답 없음");
     }
 
     /* 2. 한글표시사항 어플 — 같은 저장소의 Pages 배포 */
     if (S.ll.at && S.ll.commitAt) {
       okN++;
-      appSet("label", "ok", "배포됨", "label-list Pages · 마지막 저장 " + ago((now - new Date(S.ll.commitAt).getTime()) / MIN));
+      appSub("label", "ok", "마지막 저장 " + ago((now - new Date(S.ll.commitAt).getTime()) / MIN));
     } else if (S.ll.stale) {
-      appSet("label", "warn", "지난 값", "저장소를 못 봤어요 · " + hhmm(S.ll.at));
+      appSub("label", "warn", "저장소를 못 봤어요 · " + hhmm(S.ll.at) + " 값");
     } else {
-      appSet("label", "bad", "확인 안 됨", "저장소를 못 봤어요");
+      appSub("label", "bad", "저장소 확인 안 됨");
     }
 
     /* 3. PL 보드 — 비공개 저장소 (인증 키가 있어야 봄) */
     if (S.apps.pl) {
       okN++;
-      appSet("pl", "ok", "정상", "저장소 최근 수정 " + ago((now - Date.parse(S.apps.pl)) / MIN));
+      appSub("pl", "ok", "저장소 수정 " + ago((now - Date.parse(S.apps.pl)) / MIN));
     } else if (S.apps.noKey) {
-      appSet("pl", "mute", "키 필요", "비공개 저장소 · ⚙️에 키를 넣으면 보여요");
+      appSub("pl", "mute", "⚙️에 키를 넣으면 보여요");
     } else {
-      appSet("pl", "warn", "확인 안 됨", "저장소를 못 봤어요");
+      appSub("pl", "warn", "저장소 확인 안 됨");
     }
 
     /* 4. HR 보드 — 매장 PC가 플젝 HR에서 받아 둔 기록(hrStatus) + 저장소 */
     var repoHr = S.apps.hr ? " · 저장소 " + ago((now - Date.parse(S.apps.hr)) / MIN) : "";
     if (S.kv.hrAt) {
       okN++;
-      appSet("hr", "ok", "연동됨", "플젝 HR " + ago((now - S.kv.hrAt) / MIN) + repoHr);
+      appSub("hr", "ok", "플젝HR " + ago((now - S.kv.hrAt) / MIN) + repoHr);
     } else if (S.kv.at) {
-      appSet("hr", "warn", "기록 없음", "플젝 HR에서 아직 받은 게 없어요" + repoHr);
+      appSub("hr", "warn", "플젝HR에서 받은 기록 없음" + repoHr);
     } else {
-      appSet("hr", "mute", "모름", "시트 전체를 아직 못 봤어요" + repoHr);
+      appSub("hr", "mute", "아직 못 봤어요" + repoHr);
     }
 
     /* 5. 데스크 위젯 — Pages 배포 */
     if (S.hub.at && S.hub.commitAt) {
       okN++;
-      appSet("widget", "ok", "배포됨", "desk-widgets Pages · 마지막 저장 " + ago((now - new Date(S.hub.commitAt).getTime()) / MIN));
+      appSub("widget", "ok", "마지막 저장 " + ago((now - new Date(S.hub.commitAt).getTime()) / MIN));
     } else {
-      appSet("widget", "bad", "확인 안 됨", "저장소를 못 봤어요");
+      appSub("widget", "bad", "저장소 확인 안 됨");
     }
 
     /* 6. GW 에이전트 — 매장 PC 확장이 켜져 있는지 */
     var vw = S.kv.agentVer ? "v" + S.kv.agentVer : "버전 모름";
     var seen = ag.at ? " · " + ago((now - Number(ag.at)) / MIN) : "";
     var pl = judgePc().level;
-    if (pl === "ok") { okN++; appSet("gw", "ok", "켜짐", "매장 PC 확장 " + vw + seen); }
-    else if (pl === "warn") appSet("gw", "warn", "조용함", "매장 PC 확장 " + vw + seen);
-    else appSet("gw", "bad", "꺼짐", "매장 PC 확장 " + vw + seen);
+    if (pl === "ok") { okN++; appSub("gw", "ok", "켜짐 · " + vw + seen); }
+    else if (pl === "warn") appSub("gw", "warn", "조용함 · " + vw + seen);
+    else appSub("gw", "bad", "꺼짐 · " + vw + seen);
 
-    setField("ll-status", okN + "/" + nAll + " 정상", "card-num " + (okN >= nAll ? "c-ok" : (okN >= 4 ? "c-warn" : "c-bad")));
+    setField("ll-status", okN + "/" + nAll + " 연결", "card-num " + (okN >= nAll ? "c-ok" : (okN >= 4 ? "c-warn" : "c-bad")));
     setCardTint("cardLl", okN >= nAll ? "ok" : (okN >= 4 ? "warn" : "bad"));
 
     /* 아래 칸: 승인 기다리는 수정 · 남은 개선 목록 */
