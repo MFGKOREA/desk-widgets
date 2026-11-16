@@ -297,6 +297,95 @@
   .go-btn.small { font-size: 11.5px; min-height: 28px; padding: 4px 10px; }
   .task-empty { font-size: 12px; color: var(--mute); padding: 2px 2px 4px; }
   .task-more { font-size: 11.5px; color: var(--mute2); padding-left: 2px; }
+  /* 일 목록 — 쉬운 말 카드 + 원탭 승인 */
+  .task { gap: 7px; padding: 10px 10px 9px; }
+  .task-top { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .tbadge {
+    font-size: 10.5px; font-weight: 800; line-height: 1; padding: 4px 7px; border-radius: 999px;
+    border: 1px solid transparent; white-space: nowrap; letter-spacing: -0.1px;
+  }
+  .tbadge.proj-label { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
+  .tbadge.proj-pc { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+  .tbadge.proj-hub { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+  .tbadge.kind-pr { background: #f0f9ff; color: #075985; border-color: #bae6fd; }
+  .tbadge.kind-issue { background: #f4f4f5; color: #52525b; border-color: #e4e4e7; }
+  .tbadge.bug { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .task .task-no { margin-left: auto; font-weight: 700; color: var(--mute2); }
+  .task-title { font-size: 13px; }
+  .task-sum {
+    font-size: 12px; line-height: 1.45; color: var(--mute);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .task-who { font-size: 11px; font-weight: 600; color: var(--mute2); }
+  .task-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 1px; }
+  .act-btn {
+    font-family: inherit; font-size: 12.5px; font-weight: 800; color: #fff;
+    background: #18181b; border: 1px solid #18181b; border-radius: 999px;
+    padding: 0 15px; min-height: 34px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .act-btn:active { transform: scale(0.97); }
+  .act-btn[data-run="issue"] { background: #1d4ed8; border-color: #1d4ed8; }
+  .act-btn.loading { opacity: 0.72; }
+  .act-btn.done { background: #14532d; border-color: #14532d; opacity: 1; }
+  .act-btn:disabled { cursor: default; }
+  .act-link {
+    font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--mute2);
+    background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline;
+    text-underline-offset: 2px; -webkit-tap-highlight-color: transparent;
+  }
+  .list-hint { font-size: 11.5px; font-weight: 600; color: var(--mute2); padding: 0 2px 1px; line-height: 1.45; }
+  .list-hint b { color: #1d4ed8; font-weight: 800; cursor: pointer; }
+  #btnKey { padding-left: 9px; padding-right: 9px; }
+  #btnKey.has-key { background: #ecfdf5; border-color: #a7f3d0; }
+
+  /* 키 설정·확인 창 */
+  .sheet-mask {
+    position: fixed; inset: 0; z-index: 130; display: none;
+    align-items: flex-end; justify-content: center;
+    background: rgba(15, 15, 16, 0.48);
+  }
+  .sheet-mask.show { display: flex; }
+  .sheet-mask[hidden] { display: none !important; }
+  .sheet-box {
+    width: 100%; max-width: 470px; background: var(--win); color: var(--ink);
+    border-radius: 18px 18px 0 0; border: 1px solid var(--win-line); border-bottom: 0;
+    padding: 15px 16px calc(16px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 90vh; overflow: auto;
+    box-shadow: 0 -12px 34px rgba(0, 0, 0, 0.24);
+  }
+  .sheet-h { display: flex; align-items: flex-start; gap: 8px; }
+  .sheet-t { font-size: 15px; font-weight: 800; flex: 1 1 auto; line-height: 1.35; }
+  .sheet-x {
+    font-family: inherit; font-size: 16px; line-height: 1; background: none; border: 0;
+    color: var(--mute2); cursor: pointer; padding: 2px 4px; margin-top: -1px;
+  }
+  .sheet-p { font-size: 12.5px; line-height: 1.5; color: var(--mute); }
+  .sheet-a { color: #1d4ed8; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  .sheet-step { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; color: var(--ink2); }
+  .sheet-step > b {
+    flex: 0 0 auto; width: 18px; height: 18px; border-radius: 999px; background: #18181b; color: #fff;
+    font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .sheet-step > span { min-width: 0; }
+  .sheet-in {
+    font-family: inherit; font-size: 13px; padding: 10px 12px; border-radius: 11px;
+    border: 1px solid var(--btn-line); background: var(--btn-bg); color: var(--ink); width: 100%;
+  }
+  .sheet-in:focus { outline: 2px solid #93b4ff; outline-offset: 1px; }
+  .sheet-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sheet-btn {
+    font-family: inherit; font-size: 13px; font-weight: 800; border-radius: 11px; padding: 11px 14px;
+    border: 1px solid var(--btn-line); background: var(--btn-bg); color: var(--btn-ink);
+    cursor: pointer; flex: 1 1 auto; min-height: 44px;
+  }
+  .sheet-btn.primary { background: #18181b; border-color: #18181b; color: #fff; }
+  .sheet-btn.danger { color: #b91c1c; flex: 0 0 auto; }
+  .sheet-btn.quiet { flex: 0 0 auto; }
+  .sheet-note { font-size: 11px; color: var(--mute2); line-height: 1.45; }
+  .sheet-ok { font-size: 11.5px; font-weight: 700; color: #166534; }
   .card-foot { font-size: 10.5px; color: var(--mute2); letter-spacing: 0.2px; margin-top: -2px; }
   .card-foot span { font-variant-numeric: normal; }
   .card-note { font-size: 10.5px; color: var(--mute2); line-height: 1.5; margin-top: -3px; }
@@ -390,6 +479,20 @@
     .c-mute { color: #a3a1a6; }
     .row.tap:active { background: rgba(255, 255, 255, 0.06); }
     .task-meta.stale { color: #f0b352; }
+    .tbadge.proj-label { background: #1e2a5a; color: #c7d2fe; border-color: #38457f; }
+    .tbadge.proj-pc { background: #10352a; color: #a7f3d0; border-color: #166534; }
+    .tbadge.proj-hub { background: #3a2413; color: #fed7aa; border-color: #7c2d12; }
+    .tbadge.kind-pr { background: #0b2b40; color: #bae6fd; border-color: #075985; }
+    .tbadge.kind-issue { background: #26262a; color: #d6d4cd; border-color: #3a3a3f; }
+    .tbadge.bug { background: #3b1414; color: #fecaca; border-color: #7f1d1d; }
+    .act-btn { background: #f1efe9; color: #18181b; border-color: #f1efe9; }
+    .act-btn[data-run="issue"] { background: #2b4a86; color: #fff; border-color: #2b4a86; }
+    .act-btn.done { background: #166534; color: #fff; border-color: #166534; }
+    .list-hint b { color: #93b4ff; }
+    #btnKey.has-key { background: #10352a; border-color: #166534; }
+    .sheet-btn.primary { background: #f1efe9; color: #18181b; border-color: #f1efe9; }
+    .sheet-a { color: #93b4ff; }
+    .sheet-ok { color: #86efac; }
     .go-btn { background: #16233f; border-color: #2b4a86; color: #a9c6ff; }
     .go-btn:active { background: #1c2d52; }
     .lbar-in b { background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.45), rgba(255,255,255,0)); }
@@ -409,6 +512,9 @@
 <body>
 <div class="cursor" id="cursor"></div>
 <div class="toast" id="toast"></div>
+<div class="sheet-mask" id="sheetMask" hidden>
+  <div class="sheet-box" id="sheetBox" role="dialog" aria-modal="true" aria-label="인증 키 설정"></div>
+</div>
 
 <div class="win">
   <div class="win-top">
@@ -419,6 +525,7 @@
     </div>
     <div class="top-actions">
       <button class="chip-btn" id="btnAllRefresh" type="button" aria-label="전체 다시 확인"><span class="pulse" id="liveDot"></span><span id="refreshLabel">새로고침</span></button>
+      <button class="chip-btn" id="btnKey" type="button" aria-label="인증 키 설정" title="인증 키 넣기 (한 번만)">⚙️</button>
       <button class="chip-btn primary" id="btnDemo" type="button">시연</button>
     </div>
   </div>
@@ -921,11 +1028,23 @@
   }
 
   function taskOf(x) {
+    var labels = [];
+    if (x && Array.isArray(x.labels)) {
+      for (var i = 0; i < x.labels.length; i++) {
+        var L = x.labels[i];
+        var nm = String((L && (L.name || L)) || "").trim();
+        if (nm) labels.push(nm);
+      }
+    }
     return {
       number: Number(x && x.number) || 0,
       title: String((x && x.title) || "").trim(),
       url: (x && x.html_url) || "",
-      at: (x && x.updated_at) || null
+      at: (x && x.updated_at) || null,
+      created: (x && x.created_at) || null,
+      author: String((x && x.user && x.user.login) || ""),
+      body: String((x && x.body) || "").slice(0, 1500),
+      labels: labels
     };
   }
 
@@ -1494,7 +1613,7 @@
       go.href = top.url;
       go.target = "_blank";
       go.rel = "noopener";
-      go.textContent = goLabel(item.act);
+      go.textContent = "GitHub에서 보기";
       acts.appendChild(go);
       left.appendChild(acts);
     } else if (item.retry) {
@@ -1618,38 +1737,522 @@
     return Array.isArray(it[kind]) ? it[kind] : [];
   }
 
-  function goLabel(kind) {
-    return kind === "issues" ? "확인하러 가기" : "확인·승인하러 가기";
+  /* ---------------- 쉬운 말로 바꾸기 · 원탭 승인 ---------------- */
+
+  var PAT_KEY = "ai_hub_gh_pat";      /* 이 폰 브라우저에만 저장한다. 서버로 보내지 않는다. */
+  var ACT_KEY = "aihub.act.v1";       /* 방금 누른 결과(승인 완료·요청됨)를 다시 그려도 남긴다 */
+
+  function getPat() {
+    try { return String(localStorage.getItem(PAT_KEY) || ""); } catch (e) { return ""; }
+  }
+  function putPat(v) {
+    try {
+      if (v) localStorage.setItem(PAT_KEY, v);
+      else localStorage.removeItem(PAT_KEY);
+    } catch (e) {}
+    updateKeyBtn();
+  }
+  function maskPat(v) {
+    var t = String(v || "");
+    return t.length > 12 ? t.slice(0, 11) + "…" + t.slice(-4) : "저장된 키";
+  }
+  function actMap() {
+    try {
+      var raw = localStorage.getItem(ACT_KEY);
+      var o = raw ? JSON.parse(raw) : null;
+      return (o && typeof o === "object") ? o : {};
+    } catch (e) { return {}; }
+  }
+  function actOf(kind, it) { return actMap()[kind + ":" + it.number] || null; }
+  function setActOf(kind, it, st) {
+    var o = actMap(), k = kind + ":" + it.number;
+    if (st) o[k] = st; else delete o[k];
+    try { localStorage.setItem(ACT_KEY, JSON.stringify(o)); } catch (e) {}
+  }
+  function updateKeyBtn() {
+    var b = $("btnKey");
+    if (!b) return;
+    b.classList.toggle("has-key", !!getPat());
+    b.setAttribute("title", getPat() ? "인증 키 저장됨 · 눌러서 바꾸기" : "인증 키 넣기 (한 번만)");
+  }
+
+  /* 화면에 쓰는 만든 요소 */
+  function mk(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+
+  /* 마크다운·HTML·봇 꼬리표를 걷어내고 사람이 읽는 글만 남긴다 */
+  function plainText(v) {
+    var t = String(v || "");
+    t = t.replace(/<!--[\s\S]*?-->/g, " ");
+    t = t.replace(/```[\s\S]*?```/g, " ");
+    t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, " ");
+    t = t.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1");
+    t = t.replace(/<[^>]*>/g, " ");
+    t = t.replace(/^\s{0,3}#{1,6}\s*/gm, "");
+    t = t.replace(/^\s*[-*+]\s+/gm, "");
+    t = t.replace(/^\s*\d+\.\s+/gm, "");
+    t = t.replace(/[*_`>|]/g, "");
+    t = t.replace(/\r/g, "");
+    t = t.replace(/[ \t]{2,}/g, " ");
+    return t.trim();
+  }
+
+  /* 본문에서 사람이 바로 알아들을 한두 문장을 고른다 */
+  function summarize(it) {
+    var body = plainText(it.body);
+    if (!body) return "";
+    var lines = body.split(/\n+/);
+    var pick = "";
+    for (var i = 0; i < lines.length; i++) {
+      var ln = String(lines[i] || "").trim();
+      if (ln.length < 12) continue;
+      if (/^(요약|summary|개요|before|after|근거|evidence|점수|door|blast radius|merge danger|기준|상태)\b/i.test(ln)) continue;
+      if (/^(상태|status)\s*[:：]/i.test(ln)) continue;
+      pick = ln;
+      break;
+    }
+    if (!pick) pick = String(lines[0] || "").trim();
+    pick = pick.replace(/^[-•·]\s*/, "");
+    if (pick.length > 150) pick = pick.slice(0, 148).replace(/\s+\S*$/, "") + "…";
+    return pick;
+  }
+
+  function cleanTitle(it) {
+    var t = String(it.title || "(제목 없음)");
+    var guard = 0;
+    while (guard++ < 2) {
+      var m = t.match(/^\s*\[([^\]]{1,14})\]\s*/);
+      if (!m) break;
+      if (!/버그|bug|기능|요청|개선|후속|그록|grok|피클|봇/i.test(m[1])) break;
+      t = t.slice(m[0].length);
+    }
+    return t.trim() || "(제목 없음)";
+  }
+
+  function hasLabel(it, name) {
+    var ls = (it && it.labels) || [];
+    for (var i = 0; i < ls.length; i++) if (String(ls[i]).toLowerCase() === name) return true;
+    return false;
+  }
+
+  /* 어느 앱 이야기인지 — 제목·본문 낱말로 고른다 */
+  function projBadge(it) {
+    var text = String(it.title || "") + " " + String(it.body || "");
+    if (/ai[-\s]?hub|허브|현황판/i.test(text)) return { cls: "proj-hub", name: "허브" };
+    if (/gw-agent|크롬\s*확장|확장프로그램|플젝|플로우|세콤|매출|mis|매장\s*pc|hr\b/i.test(text)) return { cls: "proj-pc", name: "매장PC" };
+    return { cls: "proj-label", name: "발주앱" };
   }
 
   function taskRow(kind, it) {
-    var wrap = document.createElement("div");
-    wrap.className = "task";
-    var head = document.createElement("div");
-    head.className = "task-head";
-    var no = document.createElement("span");
-    no.className = "task-no";
-    no.textContent = "#" + it.number;
-    var t = document.createElement("span");
-    t.className = "task-title";
-    t.textContent = it.title || "(제목 없음)";
-    head.appendChild(no);
-    head.appendChild(t);
-    wrap.appendChild(head);
-    var meta = document.createElement("div");
-    meta.className = "task-at";
-    meta.textContent = it.at ? "고친 때 " + hhmm(it.at) + " · " + ago((Date.now() - new Date(it.at).getTime()) / MIN) : "시각을 못 봤어요";
-    wrap.appendChild(meta);
-    if (it.url) {
-      var go = document.createElement("a");
-      go.className = "go-btn";
-      go.href = it.url;
-      go.target = "_blank";
-      go.rel = "noopener";
-      go.textContent = goLabel(kind);
-      wrap.appendChild(go);
+    var wrap = mk("div", "task");
+    var top = mk("div", "task-top");
+    var pb = projBadge(it);
+    top.appendChild(mk("span", "tbadge " + pb.cls, pb.name));
+    top.appendChild(mk("span", "tbadge " + (kind === "prs" ? "kind-pr" : "kind-issue"), kind === "prs" ? "승인 대기" : "개선 요청"));
+    if (hasLabel(it, "bug")) top.appendChild(mk("span", "tbadge bug", "버그"));
+    top.appendChild(mk("span", "task-no", "#" + it.number));
+    wrap.appendChild(top);
+
+    wrap.appendChild(mk("div", "task-title", cleanTitle(it)));
+
+    var sum = summarize(it);
+    if (sum) wrap.appendChild(mk("div", "task-sum", sum));
+
+    var when = it.at ? ago((Date.now() - new Date(it.at).getTime()) / MIN) : "";
+    wrap.appendChild(mk("div", "task-who",
+      (it.author ? "@" + it.author : "쓴 사람 모름") + (when ? " · " + when + " 고침" : "")));
+
+    var acts = mk("div", "task-acts");
+    var st = actOf(kind, it);
+    var btn = mk("button", "act-btn");
+    btn.type = "button";
+    btn.setAttribute("data-run", kind === "prs" ? "pr" : "issue");
+    if (st && st.state === "merged") {
+      btn.textContent = "✓ 승인 완료";
+      btn.classList.add("done");
+      btn.disabled = true;
+    } else if (st && st.state === "requested") {
+      btn.textContent = "✓ 진행 요청됨";
+      btn.classList.add("done");
+      btn.disabled = true;
+    } else {
+      btn.textContent = kind === "prs" ? "바로 승인" : "진행 시키기";
+      btn.addEventListener("click", function () { runAction(kind, it, btn); });
     }
+    acts.appendChild(btn);
+    if (it.url) {
+      var link = mk("a", "act-link", "GitHub에서 보기");
+      link.href = it.url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      acts.appendChild(link);
+    }
+    wrap.appendChild(acts);
     return wrap;
+  }
+
+  /* ---------------- GitHub에 실제로 쓰기 ---------------- */
+
+  function ghWrite(method, path, body, pat) {
+    var headers = {
+      "Accept": "application/vnd.github+json",
+      "Authorization": "Bearer " + pat,
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+    var opts = { method: method, headers: headers, cache: "no-store" };
+    if (body) {
+      headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(body);
+    }
+    return timedFetch(GH + path, opts, 15000).then(function (r) {
+      return r.text().then(function (txt) {
+        var j = null;
+        try { j = txt ? JSON.parse(txt) : null; } catch (e) { j = null; }
+        if (!r.ok) {
+          var err = new Error("HTTP " + r.status);
+          err.status = r.status;
+          err.data = j;
+          throw err;
+        }
+        return j;
+      });
+    });
+  }
+
+  function writeErrWord(e) {
+    var st = e && e.status;
+    var m = (e && e.data && e.data.message) ? String(e.data.message) : "";
+    if (e && (e.name === "TimeoutError" || e.name === "AbortError")) return "GitHub가 대답이 늦어요. 잠시 뒤 다시 눌러 주세요.";
+    if (st === 401) return "키가 맞지 않아요. GitHub에서 만든 키 전체를 다시 넣어 주세요.";
+    if (st === 403) {
+      if (/rate limit/i.test(m)) return "GitHub가 잠시 요청을 막았어요. 한 시간쯤 뒤에 다시 해 주세요.";
+      return "이 키에 권한이 없어요. 키의 Pull requests·Issues 권한을 Read and write 로 켜 주세요.";
+    }
+    if (st === 404) return "이미 없어졌거나, 이 키에 그 저장소를 볼 권한이 없어요.";
+    if (st === 405) return "지금은 바로 합칠 수 없어요(충돌이나 저장소 규칙). GitHub에서 직접 확인해 주세요.";
+    if (st === 409) return "합치는 중에 상태가 바뀌었어요. 잠시 뒤 다시 눌러 주세요.";
+    if (st === 422) return "이미 닫혔거나 합칠 수 없는 상태예요. GitHub에서 확인해 주세요.";
+    if (!st) return "인터넷이 끊겼거나 GitHub에 닿지 못했어요.";
+    return "잠시 문제가 있어요 (HTTP " + st + ").";
+  }
+
+  function runAction(kind, it, btn) {
+    if (!getPat()) { askSheet(kind, it); return; }
+    if (kind === "prs") confirmMerge(it, btn);
+    else commentIssue(it, btn);
+  }
+
+  /* 합치기는 되돌리기 어려우니 한 번 더 확인한다 */
+  function confirmMerge(it, btn) {
+    openSheet(function (box) {
+      sheetHead(box, "이 수정을 바로 합칠까요?");
+      box.appendChild(mk("p", "sheet-p", "#" + it.number + " · " + cleanTitle(it)));
+      box.appendChild(mk("div", "sheet-note", "합치면 바로 반영돼요. 되돌리려면 GitHub에서 되돌려야 해요."));
+      var acts = mk("div", "sheet-acts");
+      var ok = mk("button", "sheet-btn primary", "합치기");
+      ok.type = "button";
+      ok.addEventListener("click", function () {
+        closeSheet();
+        mergePr(it, btn);
+      });
+      acts.appendChild(ok);
+      var no = mk("button", "sheet-btn quiet", "취소");
+      no.type = "button";
+      no.addEventListener("click", closeSheet);
+      acts.appendChild(no);
+      box.appendChild(acts);
+    });
+  }
+
+  function mergePr(it, btn) {
+    var bar = barRun(barEl("ll"));
+    if (btn) {
+      btn.classList.add("loading");
+      btn.disabled = true;
+      btn.textContent = "합치는 중…";
+    }
+    ghWrite("PUT", "/repos/" + LL + "/pulls/" + it.number + "/merge", { merge_method: "merge" }, getPat())
+      .then(function () {
+        barDone(bar, true);
+        setActOf("prs", it, { state: "merged", at: Date.now() });
+        render();
+        showToast("✓ 승인 완료 · 바로 반영됐어요");
+        loadLabelList(true).then(function () { render(); }, function () {});
+      })
+      .catch(function (e) {
+        barDone(bar, false);
+        if (btn) {
+          btn.classList.remove("loading");
+          btn.disabled = false;
+          btn.textContent = "바로 승인";
+        }
+        var needKey = (e && e.status === 401);
+        infoSheet("승인을 못 했어요", writeErrWord(e), needKey ? "키 다시 넣기" : null);
+      });
+  }
+
+  function commentIssue(it, btn) {
+    var bar = barRun(barEl("ll"));
+    if (btn) {
+      btn.classList.add("loading");
+      btn.disabled = true;
+      btn.textContent = "보내는 중…";
+    }
+    ghWrite("POST", "/repos/" + LL + "/issues/" + it.number + "/comments",
+      { body: "🚀 [HUB 진행 요청] 사용자가 AI 허브에서 작업 진행을 요청했습니다." }, getPat())
+      .then(function () {
+        barDone(bar, true);
+        setActOf("issues", it, { state: "requested", at: Date.now() });
+        render();
+        showToast("✓ 진행 요청을 남겼어요");
+        loadIssues(true).then(function () { render(); }, function () {});
+      })
+      .catch(function (e) {
+        barDone(bar, false);
+        if (btn) {
+          btn.classList.remove("loading");
+          btn.disabled = false;
+          btn.textContent = "진행 시키기";
+        }
+        var needKey = (e && e.status === 401);
+        infoSheet("요청을 못 남겼어요", writeErrWord(e), needKey ? "키 다시 넣기" : null);
+      });
+  }
+
+  /* ---------------- 창(시트) ---------------- */
+
+  var sheetPending = null;
+
+  function openSheet(build) {
+    var mask = $("sheetMask"), box = $("sheetBox");
+    if (!mask || !box) return;
+    box.innerHTML = "";
+    try { box.setAttribute("aria-label", "인증 키 설정"); } catch (e) {}
+    build(box);
+    mask.hidden = false;
+    mask.classList.add("show");
+  }
+
+  function closeSheet() {
+    var mask = $("sheetMask"), box = $("sheetBox");
+    if (mask) { mask.classList.remove("show"); mask.hidden = true; }
+    if (box) box.innerHTML = "";
+    sheetPending = null;
+  }
+
+  function sheetHead(box, title) {
+    var h = mk("div", "sheet-h");
+    h.appendChild(mk("div", "sheet-t", title));
+    var x = mk("button", "sheet-x", "✕");
+    x.type = "button";
+    x.setAttribute("aria-label", "닫기");
+    x.addEventListener("click", closeSheet);
+    h.appendChild(x);
+    box.appendChild(h);
+  }
+
+  /* 키가 없을 때: 키를 넣거나 문구를 복사하게 안내 */
+  function askSheet(kind, it) {
+    openSheet(function (box) {
+      sheetHead(box, kind === "prs" ? "한 번만 키를 넣으면 바로 승인돼요" : "한 번만 키를 넣으면 바로 요청돼요");
+      box.appendChild(mk("p", "sheet-p",
+        (kind === "prs" ? "이 수정을 여기서 바로 합치려면" : "진행 요청을 여기서 바로 남기려면") +
+        " GitHub 인증 키가 필요해요. 키는 이 폰 브라우저에만 저장되고, GitHub 말고 어디로도 보내지 않아요."));
+
+      var acts = mk("div", "sheet-acts");
+      var goKey = mk("button", "sheet-btn primary", "키 넣고 바로 실행");
+      goKey.type = "button";
+      goKey.addEventListener("click", function () { keySheet({ kind: kind, it: it }); });
+      acts.appendChild(goKey);
+      box.appendChild(acts);
+
+      var acts2 = mk("div", "sheet-acts");
+      var cp = mk("button", "sheet-btn", "요청 문구 복사");
+      cp.type = "button";
+      cp.addEventListener("click", function () { copyRequest(kind, it); });
+      acts2.appendChild(cp);
+      var gh = mk("button", "sheet-btn quiet", "GitHub에서 보기");
+      gh.type = "button";
+      gh.addEventListener("click", function () {
+        if (it.url) window.open(it.url, "_blank", "noopener");
+      });
+      acts2.appendChild(gh);
+      box.appendChild(acts2);
+      box.appendChild(mk("div", "sheet-note", "복사한 문구를 피클 채팅에 붙여넣으면 피클이 키 없이도 대신 처리해 드려요."));
+    });
+  }
+
+  /* 키 넣기·바꾸기·지우기 */
+  function keySheet(pending) {
+    sheetPending = pending || null;
+    var saved = getPat();
+    openSheet(function (box) {
+      sheetHead(box, "GitHub 인증 키");
+      box.appendChild(mk("p", "sheet-p", "승인·진행 요청을 이 화면에서 바로 하려면 키가 한 번 필요해요. 3단계면 끝나요."));
+
+      var s1 = mk("div", "sheet-step");
+      s1.appendChild(mk("b", null, "1"));
+      var t1 = mk("span");
+      t1.appendChild(document.createTextNode("GitHub에서 키를 만들어요 → "));
+      var a = mk("a", "sheet-a", "키 만들기 열기");
+      a.href = "https://github.com/settings/tokens?type=beta";
+      a.target = "_blank";
+      a.rel = "noopener";
+      t1.appendChild(a);
+      s1.appendChild(t1);
+      box.appendChild(s1);
+
+      var s2 = mk("div", "sheet-step");
+      s2.appendChild(mk("b", null, "2"));
+      s2.appendChild(mk("span", null,
+        "Access에서 저장소 두 개(MFGKOREA/label-list, MFGKOREA/desk-widgets)를 고르고, 권한은 Contents · Pull requests · Issues 를 Read and write 로 맞춰요."));
+      box.appendChild(s2);
+
+      var s3 = mk("div", "sheet-step");
+      s3.appendChild(mk("b", null, "3"));
+      s3.appendChild(mk("span", null, "만들어진 키(github_pat_…) 전체를 아래에 붙여넣고 [저장]을 눌러요."));
+      box.appendChild(s3);
+
+      var inp = mk("input", "sheet-in");
+      inp.type = "password";
+      inp.autocomplete = "off";
+      inp.spellcheck = false;
+      inp.placeholder = saved ? "새 키로 바꾸려면 붙여넣기" : "github_pat_…";
+      inp.setAttribute("aria-label", "GitHub 인증 키");
+      box.appendChild(inp);
+
+      var msg = mk("div", "sheet-note", "");
+      if (saved) {
+        var ok = mk("div", "sheet-ok", "지금 키가 저장돼 있어요 (" + maskPat(saved) + ")");
+        box.appendChild(ok);
+      }
+      box.appendChild(msg);
+      box.appendChild(mk("div", "sheet-note",
+        "이 키는 이 폰 브라우저(localStorage)에만 저장돼요. 화면 코드에는 들어 있지 않고, GitHub(api.github.com) 말고 다른 곳으로는 보내지 않아요."));
+
+      var acts = mk("div", "sheet-acts");
+      var save = mk("button", "sheet-btn primary", sheetPending ? "저장하고 바로 실행" : "저장");
+      save.type = "button";
+      save.addEventListener("click", function () {
+        var v = String(inp.value || "").trim();
+        if (!v) { msg.textContent = "키를 붙여넣어 주세요."; inp.focus(); return; }
+        if (!/^[A-Za-z0-9_\-]{20,}$/.test(v)) {
+          msg.textContent = "키 모양이 아니에요. github_pat_… 전체를 복사했는지 확인해 주세요.";
+          return;
+        }
+        putPat(v);
+        var p = sheetPending;
+        closeSheet();
+        showToast("키를 저장했어요");
+        render();
+        if (p) runAction(p.kind, p.it, null);
+      });
+      acts.appendChild(save);
+      box.appendChild(acts);
+
+      var acts2 = mk("div", "sheet-acts");
+      if (saved) {
+        var del = mk("button", "sheet-btn danger", "지우기");
+        del.type = "button";
+        del.className = "sheet-btn danger";
+        del.addEventListener("click", function () {
+          putPat("");
+          closeSheet();
+          showToast("키를 지웠어요");
+          render();
+        });
+        acts2.appendChild(del);
+      }
+      var cls = mk("button", "sheet-btn quiet", "닫기");
+      cls.type = "button";
+      cls.addEventListener("click", closeSheet);
+      acts2.appendChild(cls);
+      box.appendChild(acts2);
+    });
+  }
+
+  /* 문구 복사 — 막히면 직접 복사할 수 있게 보여준다 */
+  function requestText(kind, it) {
+    var t = cleanTitle(it);
+    if (kind === "prs") {
+      return "피클아, AI 허브에서 승인하려는데 폰에 GitHub 키가 없어서 못 눌렀어. MFGKOREA/label-list PR #" +
+        it.number + " (" + t + ") 바로 합쳐(머지)줘." + (it.url ? " " + it.url : "");
+    }
+    return "피클아, AI 허브에서 이 작업 진행을 요청해. MFGKOREA/label-list 이슈 #" +
+      it.number + " (" + t + ") 지금 진행시켜줘." + (it.url ? " " + it.url : "");
+  }
+
+  function copyText(txt) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(txt).then(function () { return true; }, function () { return legacyCopy(txt); });
+    }
+    return Promise.resolve(legacyCopy(txt));
+  }
+
+  function legacyCopy(txt) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = txt;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, txt.length);
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (e) { return false; }
+  }
+
+  function copyRequest(kind, it) {
+    var txt = requestText(kind, it);
+    copyText(txt).then(function (ok) {
+      openSheet(function (box) {
+        sheetHead(box, ok ? "요청 문구를 복사했어요" : "아래 문구를 직접 복사해 주세요");
+        box.appendChild(mk("p", "sheet-p", ok
+          ? "피클 채팅에 붙여넣으면 피클이 대신 처리해 드려요."
+          : "자동 복사가 막혔어요. 아래 글을 길게 눌러 복사해 주세요."));
+        var ta = mk("textarea", "sheet-in");
+        ta.value = txt;
+        ta.rows = 4;
+        ta.readOnly = true;
+        ta.setAttribute("aria-label", "요청 문구");
+        box.appendChild(ta);
+        var acts = mk("div", "sheet-acts");
+        var cls = mk("button", "sheet-btn primary", "닫기");
+        cls.type = "button";
+        cls.addEventListener("click", closeSheet);
+        acts.appendChild(cls);
+        box.appendChild(acts);
+      });
+      if (ok) showToast("요청 문구를 복사했어요");
+    });
+  }
+
+  function infoSheet(title, msg, keyLabel) {
+    openSheet(function (box) {
+      sheetHead(box, title);
+      box.appendChild(mk("p", "sheet-p", msg));
+      var acts = mk("div", "sheet-acts");
+      if (keyLabel) {
+        var k = mk("button", "sheet-btn", keyLabel);
+        k.type = "button";
+        k.addEventListener("click", function () { keySheet(null); });
+        acts.appendChild(k);
+      }
+      var c = mk("button", "sheet-btn primary", "확인");
+      c.type = "button";
+      c.addEventListener("click", closeSheet);
+      acts.appendChild(c);
+      box.appendChild(acts);
+    });
   }
 
   function renderTaskList(kind, boxId) {
@@ -1684,6 +2287,14 @@
         more.className = "task-more";
         more.textContent = "그 밖에 " + (items.length - n) + "건 더 있어요";
         box.appendChild(more);
+      }
+      if (!getPat()) {
+        var hint = mk("div", "list-hint");
+        hint.appendChild(document.createTextNode("키를 한 번 넣으면 여기서 바로 " + (kind === "prs" ? "승인" : "진행 요청") + "할 수 있어요 · "));
+        var kb = mk("b", null, "키 넣기");
+        kb.addEventListener("click", function () { keySheet(null); });
+        hint.appendChild(kb);
+        box.appendChild(hint);
       }
     }
     box.hidden = !openLists[kind];
@@ -1991,8 +2602,20 @@
   var demoBtn = $("btnDemo");
   if (demoBtn) demoBtn.addEventListener("click", playDemo);
 
+  var keyBtn = $("btnKey");
+  if (keyBtn) keyBtn.addEventListener("click", function () { keySheet(null); });
+
+  (function () {
+    var mask = $("sheetMask");
+    if (mask) mask.addEventListener("click", function (e) { if (e.target === mask) closeSheet(); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" || e.keyCode === 27) closeSheet();
+    });
+  })();
+
   /* 시작 */
   function boot() {
+    updateKeyBtn();
     restoreCache();
     S.nextGhAt = 0;                 // 첫 확인은 바로
     nextAutoAt = Date.now() + AUTO_SEC * 1000;
