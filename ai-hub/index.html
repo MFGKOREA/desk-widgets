@@ -299,8 +299,8 @@
       <div class="card" id="cardHub" data-card="hub">
         <div class="card-top">
           <div>
-            <div class="card-title">허브 저장소 · ai-hub</div>
-            <div class="card-sub">이 페이지의 소스 (GitHub Pages)</div>
+            <div class="card-title">허브 저장소 · desk-widgets</div>
+            <div class="card-sub">이 페이지의 소스 · ai-hub/index.html</div>
           </div>
           <div class="card-right">
             <div class="card-num c-mute" data-field="hub-badge">조회 중</div>
@@ -310,7 +310,7 @@
         <div class="rows">
           <div class="row"><div><div class="row-k">최신 커밋</div><div class="row-sub" data-field="hub-sha-sub">—</div></div><div class="row-v"><strong data-field="hub-sha">—</strong></div></div>
           <div class="row"><div><div class="row-k">커밋 시각</div></div><div class="row-v"><strong data-field="hub-when">—</strong></div></div>
-          <div class="row"><div><div class="row-k">배포 경로</div><div class="row-sub">main / 루트</div></div><div class="row-v"><strong data-field="hub-pages">—</strong></div></div>
+          <div class="row"><div><div class="row-k">배포 경로</div><div class="row-sub">main / ai-hub/</div></div><div class="row-v"><strong data-field="hub-pages">—</strong></div></div>
           <div class="row"><div><div class="row-k">이 페이지 응답</div><div class="row-sub" data-field="hub-live-sub">—</div></div><div class="row-v"><strong class="c-mute" data-field="hub-live">—</strong></div></div>
         </div>
       </div>
@@ -408,7 +408,7 @@
   var SHEET = "https://script.google.com/macros/s/AKfycbw56Q_Q3m0ZyZSHlAlRru2MZZ4-Lqj4tvfXFOfhH_YLi4HOiLn9Cj2yEbARK9LTk00t5Q/exec?api=1&status=1";
   var GH = "https://api.github.com";
   var LL = "MFGKOREA/label-list";
-  var HUB = "MFGKOREA/ai-hub";
+  var HUB = "MFGKOREA/desk-widgets";
   var GH_TTL_MS = 300000;      // 공개 GitHub 신호는 5분 간격
   var AUTO_SEC = 30;
   var MIN = 60000;
@@ -597,7 +597,7 @@
   function loadHub(force) {
     return Promise.all([
       ghJSON(GH + "/repos/" + HUB, force).catch(function () { return null; }),
-      ghJSON(GH + "/repos/" + HUB + "/commits?per_page=1", force).catch(function () { return null; })
+      ghJSON(GH + "/repos/" + HUB + "/commits?path=ai-hub/index.html&per_page=1", force).catch(function () { return null; })
     ]).then(function (res) {
       var repo = res[0] || {};
       var commits = Array.isArray(res[1]) ? res[1] : [];
@@ -610,8 +610,7 @@
         commitAt: c0 ? (c0.commit && c0.commit.committer && c0.commit.committer.date) || null : null,
         commitMsg: c0 ? String((c0.commit && c0.commit.message) || "").split("\n")[0] : "",
         pushedAt: repo.pushed_at || null,
-        pagesUrl: repo.homepage || "https://mfgkorea.github.io/desk-widgets/ai-hub/",
-        private: repo.private === true
+        pagesUrl: repo.homepage || "https://mfgkorea.github.io/desk-widgets/ai-hub/",        private: repo.private === true
       };
       return S.hub;
     }).catch(function (e) {
