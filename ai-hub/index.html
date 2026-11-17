@@ -2231,6 +2231,8 @@
     setFieldTip("cost-now", n ? "이번에 " + n + "회" : "아직 없음", n > 60 ? "c-bad" : n ? "c-ok" : "c-mute", "켜 둔 지 " + Math.round(openMin) + "분");
     setFieldTip("cost-rate", settled && perH ? "시간당 약 " + perH + "회" : "재는 중", !settled ? "c-mute" : perH > 60 ? "c-bad" : perH > 40 ? "c-warn" : "c-ok", "켜 둔 지 10분이 지나면 실제 속도로 보여 드려요 · 전체 확인 1번 6회 · 카드 버튼 1번 4~6회 (11/16 측정)");
     var left = S.ghRate === null || S.ghRate === undefined ? "모름" : S.ghRate + "/60";
+    var allBtn = $("btnAllRefresh"); // 15번 곁들여: 누르기 전에 남은 한도를 버튼에 보여 준다 (QA 2번 개선안)
+    if (allBtn) allBtn.setAttribute("title", S.ghRate === null || S.ghRate === undefined ? "코드 저장소 확인 여유를 아직 모르겠어요" : "코드 저장소 확인 " + S.ghRate + "/60 남음 · 새로고침 1번에 6회 써요");
     var lv = S.ghBlockedAt && now < S.ghBlockedAt ? "bad" : S.ghRate !== null && S.ghRate <= 15 ? "warn" : "ok";
     if (S.ghBlockedAt && now < S.ghBlockedAt) left = "한도 다 됨 · " + Math.max(1, Math.ceil((S.ghBlockedAt - now) / MIN)) + "분 뒤";
     setFieldTip("cost-left", left, "c-" + lv, "코드 저장소는 시간당 60번까지예요 (같은 재방문은 세지 않아요)");
