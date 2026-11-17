@@ -477,6 +477,15 @@
   .card-foot { font-size: 10.5px; color: var(--mute2); letter-spacing: 0.2px; margin-top: -2px; }
   .card-foot span { font-variant-numeric: normal; }
   .card-note { font-size: 10.5px; color: var(--mute2); line-height: 1.5; margin-top: -3px; }
+  /* 한도·비용(텔레메트리) 카드 — 좁은 화면에서도 넘치지 않게 한 줄에 이름·상태만 */
+  .cost-list { margin: 2px 0 4px; }
+  .cost-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 0; border-top: 1px dashed var(--line); font-size: 11.5px; }
+  .cost-item:first-child { border-top: 0; }
+  .cost-name { color: var(--ink2); font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cost-tag { flex: 0 0 auto; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line2); color: var(--mute); }
+  .cost-tag.on { color: var(--ink); border-color: #0a0a0a; }
+  .diag-note { margin-top: 6px; padding: 8px 10px; border-left: 3px solid #0a0a0a; background: var(--stat); font-size: 11px; line-height: 1.45; color: var(--ink2); word-break: keep-all; }
+
 
   /* 오늘 그룹웨어 발주 확인 */
   .order-now { border-top: 1px solid var(--line2); margin-top: 9px; padding-top: 9px; display: flex; flex-direction: column; gap: 7px; }
@@ -825,6 +834,7 @@
           <div class="order-when" id="orderWhen"></div>
           <div class="order-out" id="orderOut" hidden></div>
         </div>
+        <div class="diag-note" id="pcDiag" hidden></div>
         <div class="card-foot" data-field="pc-basis">기준 –</div>
       </div>
 
@@ -903,7 +913,31 @@
         <div class="card-note">커밋과 PR 시각으로 본 값이에요. 저장소 계정이 하나라, 누가 한 일인지는 제목의 표시([그록 봇] 등)로만 나눠요. 루이는 이 화면에서 알 수 있는 기록이 없어요.</div>
       </div>
 
-      <!-- 5. 이 현황판 상태 (맨 아래) -->
+      <!-- 5. 한도·비용: 무엇이 한도를 많이 쓰는지 + 코드(0토큰)로 옮긴 일 -->
+      <div class="card" id="cardCost" data-card="cost">
+        <div class="card-top">
+          <div class="card-head">
+            <div class="card-title">한도·비용</div>
+            <div class="card-sub">무엇이 한도를 많이 쓰는지 · 코드로 옮긴 일</div>
+          </div>
+          <div class="card-right"><div class="card-num c-mute" data-field="cost-status">확인 중</div></div>
+        </div>
+        <div class="rows">
+          <div class="row"><div class="row-k">이 화면이 쓴 확인</div><div class="row-v"><strong data-field="cost-now">–</strong></div></div>
+          <div class="row">
+            <div class="row-line">
+              <div class="row-k">자동 확인이 쓰는 양</div>
+              <div class="row-sub">코드 저장소 10분 · 매장 컴퓨터 30초 · 비공개 30분</div>
+            </div>
+            <div class="row-v"><strong data-field="cost-rate">–</strong></div>
+          </div>
+          <div class="row"><div class="row-k">남은 한도</div><div class="row-v"><strong data-field="cost-left">–</strong></div></div>
+        </div>
+        <div class="cost-list" id="costList"></div>
+        <div class="card-note" data-field="cost-note">측정값은 이 화면이 켜진 뒤 실제로 센 값이에요.</div>
+      </div>
+
+      <!-- 6. 이 현황판 상태 (맨 아래) -->
       <div class="card" id="cardHub" data-card="hub">
         <div class="card-top">
           <div class="card-head">
@@ -1004,6 +1038,20 @@
     repos: {},                                   // 저장소별 열린 PR·이슈
     aside: { at: 0, ok: false, err: null, pending: [] }
   };
+
+  /* 1.22.0 (시즌2 15번): 한도·비용 텔레메트리 — 이 화면이 코드 저장소에 실제로 보낸 요청을 센다 (304는 한도에 안 들어가서 안 셈) */
+  var GH_LOG = { n: 0, at: 0 };
+  var COST_ROWS = [
+    { name: "당일 Gross · Set · 메뉴 읽기", who: "매장 PC 코드", on: 1 },
+    { name: "플젝 HR 출퇴근·스케줄 덤프", who: "매장 PC 코드", on: 1 },
+    { name: "발주 전송 · 입고 · 주문현황", who: "매장 PC 코드", on: 1 },
+    { name: "마감 스냅샷 (21:20)", who: "매장 PC 코드", on: 1 },
+    { name: "BOH 리포트 08:00 · 22:00", who: "피클 예약", on: 1 },
+    { name: "AI 게시판 릴레이 (10분)", who: "피클 예약", on: 1 },
+    { name: "PL 우편함 확인 (10:37 · 14:43)", who: "AI 예약", on: 0 },
+    { name: "어사이드 보고서 감시", who: "AI (일시정지)", on: 0 },
+    { name: "PR 반박 · 검증", who: "GPT", on: 0 }
+  ];
 
   var inFlight = {};
   var etags = {};
@@ -1246,7 +1294,9 @@
       headers["X-GitHub-Api-Version"] = "2022-11-28";
     }
     if (c && c.etag && !force) headers["If-None-Match"] = c.etag;
+    if (!GH_LOG.at) GH_LOG.at = Date.now();
     return timedFetch(url, { headers: headers, cache: "no-store" }, GH_TIMEOUT_MS).then(function (r) {
+      if (r.status !== 304) GH_LOG.n++; // 304(안 바뀜)는 GitHub 한도에 안 들어감
       var rem = r.headers.get("x-ratelimit-remaining");
       var rst = r.headers.get("x-ratelimit-reset");
       if (rem !== null && rem !== undefined && rem !== "") S.ghRate = Number(rem);
@@ -2152,6 +2202,52 @@
 
   /* ---------------- 점검 8가지 (매장 6 + 이 화면 2) ---------------- */
 
+  /* 매장 PC가 스스로 남긴 진단 한 줄 (1.17.0 시즌2 13번) — 하루가 지난 진단은 접어 둔다 */
+  function diagOf() {
+    var st = S.sheet.stat || {}, gd = st.gwDiag || {};
+    var at = Number(gd.at || 0);
+    if (!gd.diagMsg || !at) return null;
+    if (Date.now() - at > 86400000) return null;
+    return { at: at, code: gd.code || "", msg: String(gd.diagMsg), fix: String(gd.fixedBy || "") };
+  }
+  function renderDiag(now) {
+    var el = $("pcDiag");
+    if (!el) return;
+    var d = diagOf();
+    if (!d) { el.hidden = true; el.textContent = ""; return; }
+    var fresh = now - d.at < 3 * 3600e3;
+    el.hidden = false;
+    el.textContent = (fresh ? "스스로 진단: " : "지난 진단(" + hhmm(d.at) + "): ") + d.msg;
+  }
+
+  /* 한도·비용 (시즌2 15번): 이 화면이 실제로 쓴 코드 저장소 요청 + 0토큰(코드·예약)으로 옮긴 일 */
+  function renderCost(now) {
+    var n = GH_LOG.n, openMin = Math.max(1, (now - (GH_LOG.at || now)) / MIN);
+    var settled = openMin >= 10; // 10분은 지나야 시간당 속도가 의미가 있어요 (처음 몇 초로 나누면 수백 회로 보임)
+    var perH = n ? Math.round((n / Math.max(10, openMin)) * 60) : 0;
+    var nCode = 0;
+    for (var i = 0; i < COST_ROWS.length; i++) if (COST_ROWS[i].on) nCode++;
+    setField("cost-status", nCode + "/" + COST_ROWS.length + " 코드", "card-num c-" + (nCode >= COST_ROWS.length ? "ok" : "warn"));
+    setFieldTip("cost-now", n ? "이번에 " + n + "회" : "아직 없음", n > 60 ? "c-bad" : n ? "c-ok" : "c-mute", "켜 둔 지 " + Math.round(openMin) + "분");
+    setFieldTip("cost-rate", settled && perH ? "시간당 약 " + perH + "회" : "재는 중", !settled ? "c-mute" : perH > 60 ? "c-bad" : perH > 40 ? "c-warn" : "c-ok", "켜 둔 지 10분이 지나면 실제 속도로 보여 드려요 · 전체 확인 1번 6회 · 카드 버튼 1번 4~6회 (11/16 측정)");
+    var left = S.ghRate === null || S.ghRate === undefined ? "모름" : S.ghRate + "/60";
+    var lv = S.ghBlockedAt && now < S.ghBlockedAt ? "bad" : S.ghRate !== null && S.ghRate <= 15 ? "warn" : "ok";
+    if (S.ghBlockedAt && now < S.ghBlockedAt) left = "한도 다 됨 · " + Math.max(1, Math.ceil((S.ghBlockedAt - now) / MIN)) + "분 뒤";
+    setFieldTip("cost-left", left, "c-" + lv, "코드 저장소는 시간당 60번까지예요 (같은 재방문은 세지 않아요)");
+    var box = $("costList");
+    if (box && !box.getAttribute("data-done")) {
+      var html = "";
+      for (var j = 0; j < COST_ROWS.length; j++) {
+        var r = COST_ROWS[j];
+        html += '<div class="cost-item"><span class="cost-name">' + r.name + '</span><span class="cost-tag' + (r.on ? " on" : "") + '">' + (r.on ? "코드·예약" : "AI") + "</span></div>";
+      }
+      box.innerHTML = html;
+      box.setAttribute("data-done", "1");
+      setFieldTip("cost-note", "코드·예약 " + nCode + "개는 사람이 눌러도 토큰이 안 들어요. AI 칸은 판단이 필요해서 남겨 둔 일이에요.", "card-note");
+    }
+    setCardTint("cardCost", lv === "bad" ? "bad" : lv === "warn" ? "warn" : nCode >= COST_ROWS.length ? "ok" : "warn");
+  }
+
   function buildChecks() {
     var now = Date.now();
     var out = [];
@@ -2179,6 +2275,10 @@
     } else {
       add("bad", "현황판 자료를 못 받았어요", "매장 컴퓨터 상태도 함께 못 봤어요", { retry: "pc" });
     }
+
+    /* 1-1. 매장 PC가 스스로 남긴 진단 — 있으면 사람이 손댈 일이므로 '손볼 것'에 같이 올린다 */
+    var dg = diagOf();
+    if (dg) add("warn", "매장 PC가 스스로 진단했어요", dg.msg);
 
     /* 2. 매출 가져오기 */
     var sj = judgeSales();
@@ -2484,6 +2584,7 @@
     if (mw) { if (modeRow) modeRow.hidden = false; setField("pc-mode", mw); }
     else { if (modeRow) modeRow.hidden = true; }
     setField("pc-basis", "기준 " + (S.sheet.at ? hhmm(S.sheet.at) : "–") + (S.sheet.stale ? " · 지난 값" : ""));
+    renderDiag(now);
     setCardTint("cardPc", pj.level === "mute" ? null : pj.level);
 
     /* 매출·발주 */
@@ -2532,6 +2633,9 @@
     }
     setField("nodes-status", recent + "/3 활동", "card-num " + (recent >= 3 ? "c-ok" : (recent >= 1 ? "c-warn" : "c-bad")));
     setCardTint("cardNodes", recent >= 3 ? "ok" : (recent >= 1 ? "warn" : "bad"));
+
+    /* 한도·비용 */
+    renderCost(now);
 
     /* 점검 요약 */
     var checks = buildChecks();
