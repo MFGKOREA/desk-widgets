@@ -1,12 +1,12 @@
 {
-  "version": "1.21.2",
-  "file": "DeskWidgets-1.21.2-app.zip",
-  "sha256": "4620770dab5aef8b830a03b7f05c4022c08fef47606e11bdf1d508e3061031b8",
+  "version": "1.21.3",
+  "file": "DeskWidgets-1.21.3-app.zip",
+  "sha256": "7f4b619434c1b1781dae355b102919da48d61084f8af463cce6c510a01e7a95b",
   "electron": "manual-install",
   "electronV2": "44.9.0",
-  "asar": "DeskWidgets-1.21.2.asar",
-  "asarSha256": "2623a472a5cf6ea5d93a51a28bc03e751324c85bfbc2cf6e484e06c81fd319ee",
-  "asarSize": 2677845,
-  "full": "DeskWidgets-1.21.2-win64.zip",
-  "notes": "Order sheet events feed now starts at 2026-09-01 and includes recordFrom; resends once after the change"
+  "asar": "DeskWidgets-1.21.3.asar",
+  "asarSha256": "96a1ae954e4f6a5a50f44dc7ce3f48c5f2bd0e9a97e2fadbc88a26d5a54b8456",
+  "asarSize": 2679791,
+  "full": "DeskWidgets-1.21.3-win64.zip",
+  "notes": "Widgets return to today after 5 minutes idle on another date (date shown in amber); phone page drops the plan label and shows missing/needs-request counts"
 }
